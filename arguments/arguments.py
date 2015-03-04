@@ -15,23 +15,20 @@ from schema import Schema, SchemaError, Or, Optional, Use
 class Arguments(object):
     """
     Argument dict to boject
+    @DynamicAttrs
     """
     def __init__(self, doc=None, validate_schema=True, yamlfile=None, parse_arg=True, verbose=None):
         """
+        
         @type yamlfile: str, unicode, None
         @type verbose: bool, None
         @return: None
         """
-        self.once = None
-        self.command = None
-        self.giturl = None
-        self.cmdfolder = None
         self.verbose = verbose
-        self.giturl = None
-        self.gitfolder = None
-        self.interval = None
+        self.once = None
         self.write = None
         self.load = None
+        setattr(self, "posarg1", None)
         self.validate_schema = validate_schema
         self.reprdict = {}
         self.doc = doc
@@ -239,6 +236,10 @@ class Arguments(object):
         if self.load is None:
             if self.doc is None:
                 self.doc = __doc__
+            self.doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
+  -l --load=<loadymlpath>\tLoad arguments yaml file.
+"""         
+
             arguments = dict(docopt(self.doc))
             k = ""
             try:
