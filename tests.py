@@ -22,7 +22,7 @@ import os
 import unittest
 from arguments import Arguments
 from pyprofiler import start_profile, end_profile
-from console_utils import console
+from consoleprinter import console
 
 def raises_error(*args, **kwds):
     """

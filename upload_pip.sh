@@ -9,4 +9,4 @@ python setup.py register
 python setup.py sdist
 python setup.py sdist upload
 cd piphomepage
-zip console_utils *
+zip consoleprinter *

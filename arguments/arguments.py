@@ -10,7 +10,7 @@ import yaml
 from os.path import exists, expanduser
 from docopt import docopt
 from schema import Schema, SchemaError, Or, Optional, Use
-from console_utils import console, handle_ex
+from consoleprinter import console, handle_ex
 
 
 class Arguments(object):

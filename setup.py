@@ -6,11 +6,11 @@ license: GNU-GPL2
 """
 from setuptools import setup
 setup(name='arguments',
-      version='0.1',
+      version='0.2',
       description='Argument parser based on docopt',
       url='https://github.com/erikdejonge/arguments',
       author='Erik de Jonge',
       author_email='erik@a8.nl',
       license='GPL',
       packages=['arguments'],
-      zip_safe=True, requires=['docopt', 'schema', 'console_utils'])
+      zip_safe=True, requires=['docopt', 'schema', 'consoleprinter'])
