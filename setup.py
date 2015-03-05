@@ -6,7 +6,7 @@ license: GNU-GPL2
 """
 from setuptools import setup
 setup(name='arguments',
-      version='0.2',
+      version='0.21',
       description='Argument parser based on docopt',
       url='https://github.com/erikdejonge/arguments',
       author='Erik de Jonge',
