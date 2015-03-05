@@ -1,4 +1,23 @@
+# coding=utf-8
 """
+ coding=utf-8
+ Author:
+   erik@a8.nl (04-03-15)
+   license: GNU-GPL2
+"""
+from unittester import *
+from arguments import *
+
+
+def raises_error(*args, **kwds):
+    """
+    @type args: tuple
+    @type kwds: str, unicode
+    @return: None
+    """
+    raise ValueError('Invalid value: %s%s' % (args, kwds))
+
+optionsdoc = """
 arguments test
 
 Usage:
@@ -11,21 +30,6 @@ Options:
   -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
   -v --verbose                  Folder from where to run the command [default: .].
 """
-# coding=utf-8
-# Author:
-#   erik@a8.nl (04-03-15)
-#   license: GNU-GPL2
-from unittester import *
-from arguments import *
-
-
-def raises_error(*args, **kwds):
-    """
-    @type args: tuple
-    @type kwds: str, unicode
-    @return: None
-    """
-    raise ValueError('Invalid value: %s%s' % (args, kwds))
 
 
 class ArgumentTest(unittest.TestCase):
@@ -39,18 +43,19 @@ class ArgumentTest(unittest.TestCase):
         """
         test_parse_args
         """
-        schema = Schema({})
+        myschema = Schema({})
+
         def test_empty():
             """
             test_empty
             """
-            Arguments(__doc__,schema, argv=[])
+            Arguments(optionsdoc, validateschema=myschema, argvalue=[])
 
         self.assertRaises(DocoptExit, test_empty)
 
         exit_ex = None
         try:
-            Arguments(__doc__, schema, argv=[])
+            Arguments(optionsdoc, myschema, argvalue=[])
         except DocoptExit as de:
             exit_ex = de
 
@@ -59,28 +64,32 @@ class ArgumentTest(unittest.TestCase):
         retval = "Usage:\n  tests.py <posarg1> <posarg2>"
         self.assertEqual(exit_ex.usage.strip(), retval.strip())
 
-
     def test_constructor_posargs(self):
         """
         test_parse_args
         """
-        schema = Schema([str])
+        myschema = Schema({"posarg1": Or(str), "posarg2": Or(str)})
         exit_ex = None
+        args = None
         try:
-            args = Arguments(__doc__, argv=['posval1', 'posval2'])
+            args = Arguments(doc=optionsdoc, validateschema=myschema, argvalue=['posval1', 'posval2'])
         except DocoptExit as de:
             exit_ex = de
 
         self.assertIsNone(exit_ex)
         self.assertIsNotNone(args)
-        print args.as_yaml()
-        #retval = "Usage:\n  tests.py <posarg1> <posarg2>"
-        #self.assertEqual(exit_ex.usage.strip(), retval.strip())
+        self.assertEqual(args.posarg1, "posval1")
+        self.assertEqual(args.posarg2, "posval2")
+
+        # retval = "Usage:\n  tests.py <posarg1> <posarg2>"
+
+        # self.assertEqual(exit_ex.usage.strip(), retval.strip())
+
 
 def main():
     """
     main
-    schema = Schema({"pa_command": Or(None, str),
+    myschema = Schema({"pa_command": Or(None, str),
                              "pa_giturl": Or(None, lambda x: ".git" in x),
                              Optional("-i"): int,
                              Optional("op_help"): Or(Use(bool), error="[-h|--help] must be a bool"),
@@ -91,9 +100,11 @@ def main():
                              Optional("op_write"): Or(None, self.not_exists, exists, error='[-w|--write] path exists'),
                              Optional("op_gitfolder"): Or(str, exists, error='[-g|--gitfolder] path should exist'),
                              Optional("op_cmdfolder"): Or(str, exists, error='[-c|--cmdfolder] path should exist')})
+
     """
-    #arguments = docopt(__doc__)
-    #print arguments
+
+    # arguments = docopt(__doc__)
+    # print arguments
     unit_test_main(globals())
 
 
