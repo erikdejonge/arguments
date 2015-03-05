@@ -8,7 +8,7 @@ license: GNU-GPL2
 import os
 import yaml
 from os.path import exists, expanduser
-from docopt import docopt
+from docopt import DocoptExit, docopt
 from schema import *
 from consoleprinter import console, handle_ex
 
@@ -18,7 +18,7 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc, schema=None, argv=None, yamlfile=None, parse_arguments=True, verbose=None):
+    def __init__(self, doc, schema, argv=None, yamlfile=None, parse_arguments=True, verbose=None):
         """
         @type doc: str, unicode, None
         @type schema: Schema, None
@@ -28,6 +28,8 @@ class Arguments(object):
         @type argv: str, unicode, None
         @return: None
         """
+        if schema is None:
+            raise AssertionError("no schema")
         self.m_verbose = verbose
         self.m_once = None
         self.write = None
@@ -245,7 +247,7 @@ class Arguments(object):
             self.m_doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
   -l --load=<loadymlpath>\tLoad arguments yaml file.
 """
-            arguments = dict(docopt(self.m_doc))
+            arguments = dict(docopt(self.m_doc, self.m_argv))
             k = ""
             try:
                 for k in arguments:
