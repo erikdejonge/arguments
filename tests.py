@@ -18,7 +18,7 @@ Options:
 #   erik@a8.nl (04-03-15)
 #   license: GNU-GPL2
 
-from unittester import run_unit_test
+from unittester import run_unit_test, unittest
 from arguments import Arguments
 
 
