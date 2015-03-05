@@ -13,13 +13,14 @@ Options:
   -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
   -v --verbose                  Folder from where to run the command [default: .].
 """
+
 # Author:
 #   erik@a8.nl (04-03-15)
 #   license: GNU-GPL2
 
 import unittest
 from arguments import Arguments
-
+from pyprofiler import start_profile, end_profile
 
 def raises_error(*args, **kwds):
     """
@@ -31,6 +32,18 @@ def raises_error(*args, **kwds):
 
 
 class ArgumentTest(unittest.TestCase):
+    """
+    @type unittest.TestCase: class
+    @return: None
+    """
+    arguments = None
+
+    def setUp(self):
+        """
+        setUp
+        """
+        #self.arguments = Arguments(__doc__)
+        pass
 
     def test_assert_raises(self):
         """
@@ -42,19 +55,98 @@ class ArgumentTest(unittest.TestCase):
         """
         test_parse_args
         """
-        pass
+        self.assertIsNotNone(self.arguments)
 
+
+def run_unit_test(class_name=None, methodname=None, caller_globals=None, failfast=True, profile=False, quiet=True):
+    """
+    @type class_name: str, unicode
+    @type methodname: str, unicode
+    @type caller_globals: str, unicode
+    @type failfast: bool
+    @type profile: bool
+    @return: None
+    """
+
+    #clear_screen()
+    suite = unittest.TestSuite()
+
+    if failfast is None:
+        failfast = True
+
+    if methodname and not class_name:
+        for i in caller_globals:
+            if isinstance(caller_globals[i], type):
+                if issubclass(caller_globals[i], unittest.TestCase):
+                    for m in dir(caller_globals[i]):
+                        if methodname == m:
+                            if class_name:
+                                console("found another", m, "in", i, color="red")
+                                a = raw_input("would you like to use this one? (y/n=default): ")
+
+                                if a.strip().lower() == "y":
+                                    class_name = i
+                            else:
+                                if quiet is False:
+                                    console("found", m, "in", i, color="cyan")
+
+                                class_name = i
+
+        if not class_name:
+            raise ValueError("run_unit_test:cannot find class for method")
+
+    cl = [os.path.basename(os.getcwd())]
+
+    if methodname and class_name:
+        cl.append(class_name + ":" + methodname)
+    elif class_name:
+        cl.append(class_name)
+    elif methodname:
+        cl.append(methodname)
+
+    if failfast is True:
+        if quiet is False:
+            cl.append("failing fast")
+
+    if class_name != "_*_":
+        if len(cl) > 0:
+            if quiet is False:
+                console(*cl, color="cyan")
+
+    if methodname and class_name:
+        cls = caller_globals[class_name]
+        suite.addTest(cls(methodname))
+    else:
+        if class_name is not None:
+            suite = unittest.TestLoader().loadTestsFromTestCase(caller_globals[class_name])
+        else:
+            if "TESTDIR" in os.environ:
+                suite = unittest.TestLoader().discover(os.environ["TESTDIR"])
+            else:
+                suite = unittest.TestLoader().discover(".")
+
+    profiletrace = None
+
+    if profile is True:
+        profiletrace = start_profile()
+
+    if quiet is True:
+        buffer = ""
+        result = unittest.TextTestRunner(failfast=failfast, stream=open("/dev/null", "w"), buffer=buffer).run(suite)
+    else:
+        result = unittest.TextTestRunner(failfast=failfast).run(suite)
+
+    if profiletrace is not None:
+        end_profile(profiletrace, items=50)
+
+    return result
 
 def main():
     """
      @DynamicAttrs
     main
     """
-    arguments = Arguments(__doc__, False, verbose=True)
-    print arguments
-    print arguments.posarg1
-
-    # unittest.main()
+    unittest.main()
 
 
 if __name__ == "__main__":
