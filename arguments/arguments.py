@@ -9,7 +9,7 @@ import os
 import yaml
 from os.path import exists, expanduser
 from docopt import docopt
-from schema import Schema, SchemaError, Or, Optional, Use
+from schema import *
 from consoleprinter import console, handle_ex
 
 
@@ -18,25 +18,29 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc=None, validate_schema=True, yamlfile=None, parse_arg=True, verbose=None):
+    def __init__(self, doc, schema=None, argv=None, yamlfile=None, parse_arguments=True, verbose=None):
         """
+        @type doc: str, unicode, None
+        @type schema: Schema, None
         @type yamlfile: str, unicode, None
+        @type parse_arguments: bool
         @type verbose: bool, None
+        @type argv: str, unicode, None
         @return: None
         """
-        self.verbose = verbose
-        self.once = None
+        self.m_verbose = verbose
+        self.m_once = None
         self.write = None
         self.load = None
-        setattr(self, "posarg1", None)
-        self.validate_schema = validate_schema
-        self.reprdict = {}
-        self.doc = doc
+        self.m_schema = schema
+        self.m_reprdict = {}
+        self.m_doc = doc
+        self.m_argv = argv
 
         if yamlfile:
             self.from_yaml_file(yamlfile)
-        elif parse_arg is True:
-            self.parse_args(validate_schema)
+        elif parse_arguments is True:
+            self.parse_argumentss(schema)
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -168,7 +172,7 @@ class Arguments(object):
 
     def _set_fields(self, positional, options):
         """
-        _parse_args
+        _parse_argumentss
         """
         dictionary = {}
 
@@ -177,8 +181,8 @@ class Arguments(object):
             self.options = options.copy()
             dictionary = positional.copy()
             dictionary.update(options.copy())
-            self.reprdict = {"positional": positional.copy(),
-                             "options": options.copy()}
+            self.m_reprdict = {"positional": positional.copy(),
+                               "options": options.copy()}
 
         def _traverse(key, element):
             """
@@ -226,22 +230,22 @@ class Arguments(object):
 
         return opts, posarg
 
-    def parse_args(self, validate_schema=True):
+    def parse_argumentss(self, schema=True):
         """
-        @type validate_schema: bool
+        @type schema: Schema
         @return: None
         """
-        if validate_schema is not None:
-            self.validate_schema = validate_schema
+        if schema is not None:
+            self.m_schema = schema
 
         if self.load is None:
-            if self.doc is None:
-                self.doc = __doc__
+            if self.m_doc is None:
+                self.m_doc = __doc__
 
-            self.doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
+            self.m_doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
   -l --load=<loadymlpath>\tLoad arguments yaml file.
 """
-            arguments = dict(docopt(self.doc))
+            arguments = dict(docopt(self.m_doc))
             k = ""
             try:
                 for k in arguments:
@@ -271,25 +275,13 @@ class Arguments(object):
             for k in loaded_arguments["positional"]:
                 arguments["pa_" + k] = loaded_arguments["positional"][k]
         try:
-            schema = Schema({"pa_command": Or(None, str),
-                             "pa_giturl": Or(None, lambda x: ".git" in x),
-                             Optional("-i"): int,
-                             Optional("op_help"): Or(Use(bool), error="[-h|--help] must be a bool"),
-                             Optional("op_verbose"): Or(Use(bool), error="[-v|--verbose] must be a bool"),
-                             Optional("op_once"): Or(Use(bool), error="[-o|--once] must be a bool"),
-                             Optional("op_interval"): Or(Use(int), error="[-i|--interval] must be an int"),
-                             Optional("op_load"): Or(None, exists, error='[-l|--load] path should not exist'),
-                             Optional("op_write"): Or(None, self.not_exists, exists, error='[-w|--write] path exists'),
-                             Optional("op_gitfolder"): Or(str, exists, error='[-g|--gitfolder] path should exist'),
-                             Optional("op_cmdfolder"): Or(str, exists, error='[-c|--cmdfolder] path should exist')})
-
             if "--" in arguments:
                 del arguments["--"]
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.viewitems())
 
-            if self.validate_schema is True:
-                arguments = schema.validate(arguments)
+            if self.m_schema is not None:
+                arguments = self.m_schema.validate(arguments)
         except SchemaError as e:
             if "lambda" in str(e):
                 err = "Error: giturl should end with .git"
@@ -298,7 +290,7 @@ class Arguments(object):
 
             handle_ex(e, extra_info=err)
 
-        if self.verbose:
+        if self.m_verbose:
             print self.arguments_for_console(arguments)
 
         options, positional_arguments = self.sort_arguments(arguments)
@@ -331,7 +323,7 @@ class Arguments(object):
         """
         as_yaml
         """
-        return "---\n" + yaml.dump(self.reprdict, default_flow_style=False)
+        return "---\n" + yaml.dump(self.m_reprdict, default_flow_style=False)
 
     def from_yaml_file(self, file_path):
         """
@@ -348,4 +340,4 @@ class Arguments(object):
         @type yamldata: str, unicode
         @return: None
         """
-        self.reprdict = yaml.load(yamldata)
+        self.m_reprdict = yaml.load(yamldata)
