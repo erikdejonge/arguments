@@ -429,7 +429,7 @@ class Arguments(object):
             validate_arguments = dict((x.replace("<", "").replace(">", "").replace("--", "").replace("-", "_"), y) for x, y in arguments.viewitems())
 
             if self.m_schema is not None:
-                arguments = self.m_schema.validate(validate_arguments)
+                self.m_schema.validate(validate_arguments)
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.viewitems())
         except SchemaError as e:
@@ -569,7 +569,7 @@ class Arguments(object):
         """
         dictionary = {}
 
-        if positional and options:
+        if positional is not None and options is not None:
             self.positional = positional.copy()
             self.options = options.copy()
             dictionary = positional.copy()
@@ -588,8 +588,8 @@ class Arguments(object):
             else:
                 return key, element
 
-        object_dict = dict(_traverse(k, v) for k, v in dictionary.iteritems())
-        self.__dict__.update(object_dict)
+        for k, v in dictionary.iteritems():
+            setattr(self, k, v)
 
     @staticmethod
     def sort_arguments(arguments):

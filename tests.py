@@ -81,10 +81,23 @@ class ArgumentTest(unittest.TestCase):
         self.assertEqual(args.posarg1, "posval1")
         self.assertEqual(args.posarg2, "posval2")
 
-        # retval = "Usage:\n  tests.py <posarg1> <posarg2>"
 
-        # self.assertEqual(exit_ex.usage.strip(), retval.strip())
+    def test_constructor_options(self):
+        """
+        test_parse_args
+        """
+        myschema = Schema({"posarg1": Or(str), "posarg2": Or(str)})
+        exit_ex = None
+        args = None
+        try:
+            args = Arguments(doc=optionsdoc, validateschema=myschema, argvalue=['posval1', 'posval2'])
+        except DocoptExit as de:
+            exit_ex = de
 
+        self.assertIsNone(exit_ex)
+        self.assertIsNotNone(args)
+        self.assertEqual(args.posarg1, "posval1")
+        self.assertEqual(args.posarg2, "posval2")
 
 def main():
     """
