@@ -10,6 +10,7 @@ import yaml
 from os.path import exists, expanduser
 from docopt import docopt
 from schema import Schema, SchemaError, Or, Optional, Use
+from console_utils import console, handle_ex
 
 
 class Arguments(object):
@@ -19,7 +20,6 @@ class Arguments(object):
     """
     def __init__(self, doc=None, validate_schema=True, yamlfile=None, parse_arg=True, verbose=None):
         """
-        
         @type yamlfile: str, unicode, None
         @type verbose: bool, None
         @return: None
@@ -32,6 +32,7 @@ class Arguments(object):
         self.validate_schema = validate_schema
         self.reprdict = {}
         self.doc = doc
+
         if yamlfile:
             self.from_yaml_file(yamlfile)
         elif parse_arg is True:
@@ -236,10 +237,10 @@ class Arguments(object):
         if self.load is None:
             if self.doc is None:
                 self.doc = __doc__
+
             self.doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
   -l --load=<loadymlpath>\tLoad arguments yaml file.
-"""         
-
+"""
             arguments = dict(docopt(self.doc))
             k = ""
             try:
@@ -257,12 +258,11 @@ class Arguments(object):
                             arguments[k] = arguments[k].rstrip("/").strip()
 
             except AttributeError as e:
-                print "\033[31mAttribute error:" + k.strip(), "->", str(e), "\033[0m"
-                print "\033[30m", "attrs: " + "\033[0m",
-
+                console("Attribute error:" + k.strip(), "->", str(e), color="red")
                 for k in arguments:
-                    print "\033[30m", k.strip() + "\033[0m",
-                raise e
+                    console(k.strip(), color="red")
+
+                handle_ex(e)
         else:
             loaded_arguments = yaml.load(open(self.load))
             arguments = {}
@@ -294,10 +294,9 @@ class Arguments(object):
             if "lambda" in str(e):
                 err = "Error: giturl should end with .git"
             else:
-                err = str(e)
+                err = ""
 
-            print "\033[31m" + err.strip() + "\033[0m"
-            raise e
+            handle_ex(e, extra_info=err)
 
         if self.verbose:
             print self.arguments_for_console(arguments)

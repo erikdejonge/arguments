@@ -18,9 +18,11 @@ Options:
 #   erik@a8.nl (04-03-15)
 #   license: GNU-GPL2
 
+import os
 import unittest
 from arguments import Arguments
 from pyprofiler import start_profile, end_profile
+from console_utils import console
 
 def raises_error(*args, **kwds):
     """
@@ -42,8 +44,8 @@ class ArgumentTest(unittest.TestCase):
         """
         setUp
         """
-        #self.arguments = Arguments(__doc__)
-        pass
+        self.arguments = Arguments(__doc__)
+
 
     def test_assert_raises(self):
         """
@@ -58,7 +60,7 @@ class ArgumentTest(unittest.TestCase):
         self.assertIsNotNone(self.arguments)
 
 
-def run_unit_test(class_name=None, methodname=None, caller_globals=None, failfast=True, profile=False, quiet=True):
+def run_unit_test(class_name=None, methodname=None, caller_globals=None, failfast=True, profile=False, quiet=False):
     """
     @type class_name: str, unicode
     @type methodname: str, unicode
@@ -146,7 +148,7 @@ def main():
      @DynamicAttrs
     main
     """
-    unittest.main()
+    print run_unit_test("ArgumentTest", caller_globals=globals())
 
 
 if __name__ == "__main__":
