@@ -18,11 +18,9 @@ Options:
 #   erik@a8.nl (04-03-15)
 #   license: GNU-GPL2
 
-import os
-import unittest
+from unittester import run_unit_test
 from arguments import Arguments
-from pyprofiler import start_profile, end_profile
-from consoleprinter import console
+
 
 def raises_error(*args, **kwds):
     """
@@ -45,7 +43,6 @@ class ArgumentTest(unittest.TestCase):
         setUp
         """
         self.arguments = Arguments(__doc__)
-
 
     def test_assert_raises(self):
         """
