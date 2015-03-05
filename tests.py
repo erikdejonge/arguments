@@ -17,7 +17,6 @@ Options:
 # Author:
 #   erik@a8.nl (04-03-15)
 #   license: GNU-GPL2
-
 from unittester import *
 from arguments import Arguments
 
@@ -55,8 +54,6 @@ class ArgumentTest(unittest.TestCase):
         test_parse_args
         """
         self.assertIsNotNone(self.arguments)
-
-
 
 
 def main():
