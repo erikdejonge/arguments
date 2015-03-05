@@ -37,22 +37,12 @@ class ArgumentTest(unittest.TestCase):
     """
     arguments = None
 
-    def setUp(self):
-        """
-        setUp
-        """
-        self.arguments = Arguments(__doc__)
 
-    def test_assert_raises(self):
-        """
-        test_assert_raises
-        """
-        self.assertRaises(ValueError, raises_error, 'a', b='c')
-
-    def test_parse_args(self):
+    def test_constructor(self):
         """
         test_parse_args
         """
+        self.arguments = Arguments(__doc__)
         self.assertIsNotNone(self.arguments)
 
 
