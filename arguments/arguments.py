@@ -582,17 +582,6 @@ class Arguments(object):
             self.m_reprdict = {"positional": positional.copy(),
                                "options": options.copy()}
 
-        def _traverse(key, element):
-            """
-            @type key: str, unicode
-            @type element: str, unicode
-            @return: None
-            """
-            if isinstance(element, dict):
-                return key, "dicts not allowed"
-            else:
-                return key, element
-
         for k, v in dictionary.iteritems():
             if hasattr(v, "strip"):
                 v = v.strip("'")
