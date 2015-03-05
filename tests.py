@@ -85,9 +85,7 @@ class ArgumentTest(unittest.TestCase):
         """
         test_parse_args
         """
-        args = None
         inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
-
         args = Arguments(doc=optionsdoc, argvalue=inputval)
         self.assertIsNotNone(args)
         self.assertEqual(args.posarg1, "aa")
@@ -96,36 +94,20 @@ class ArgumentTest(unittest.TestCase):
         self.assertEqual(args.opt2, "foobar")
 
     def test_yaml(self):
-
-
+        """
+        test_yaml
+        """
         inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
-
         args = Arguments(doc=optionsdoc, argvalue=inputval)
-        yaml = args.as_yaml()
-        args2 = Arguments(yamlstr=yaml)
+        yamls = args.as_yaml()
+        args2 = Arguments(yamlstr=yamls)
         self.assertEqual(args.as_yaml(), args2.as_yaml())
+
 
 def main():
     """
     main
-    myschema = Schema({"pa_command": Or(None, str),
-                             "pa_giturl": Or(None, lambda x: ".git" in x),
-                             Optional("-i"): int,
-                             Optional("op_help"): Or(Use(bool), error="[-h|--help] must be a bool"),
-                             Optional("op_verbose"): Or(Use(bool), error="[-v|--verbose] must be a bool"),
-                             Optional("op_once"): Or(Use(bool), error="[-o|--once] must be a bool"),
-                             Optional("op_interval"): Or(Use(int), error="[-i|--interval] must be an int"),
-                             Optional("op_load"): Or(None, exists, error='[-l|--load] path should not exist'),
-                             Optional("op_write"): Or(None, self.not_exists, exists, error='[-w|--write] path exists'),
-                             Optional("op_gitfolder"): Or(str, exists, error='[-g|--gitfolder] path should exist'),
-                             Optional("op_cmdfolder"): Or(str, exists, error='[-c|--cmdfolder] path should exist')})
-
     """
-
-    #import sys
-    #arguments = docopt(optionsdoc)
-    # print "---"
-    # print arguments
     unit_test_main(globals())
 
 
