@@ -18,7 +18,7 @@ Options:
 #   erik@a8.nl (04-03-15)
 #   license: GNU-GPL2
 
-from unittester import run_unit_test, unittest
+from unittester import *
 from arguments import Arguments
 
 
@@ -57,12 +57,13 @@ class ArgumentTest(unittest.TestCase):
         self.assertIsNotNone(self.arguments)
 
 
+
+
 def main():
     """
-     @DynamicAttrs
     main
     """
-    print run_unit_test("ArgumentTest", caller_globals=globals())
+    unit_test_main(globals())
 
 
 if __name__ == "__main__":
