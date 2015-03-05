@@ -181,6 +181,13 @@ class Schema(object):
         """
         return '%s(%r)' % (self.__class__.__name__, self._schema)
 
+    def add_void_schema_item(self, key):
+        """
+        @type key: str, unicode
+        @return: None
+        """
+        self._schema[key] = Use(str)
+
     def get_keys(self):
         """
         get_keys
@@ -256,9 +263,7 @@ class Schema(object):
             if len(new) != len(data):
                 wrong_keys = set(data.keys()) - set(new.keys())
                 s_wrong_keys = ', '.join('%r' % (k,) for k in sorted(wrong_keys))
-                raise SchemaError('wrong keys %s in %r' % (s_wrong_keys, data),
-
-                                  e)
+                raise SchemaError('wrong keys %s in %r' % (s_wrong_keys, data), e)
 
             # Apply default-having optionals that haven't been used:
             defaults = set(k for k in s if isinstance(k, Optional) and
@@ -337,18 +342,17 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc, validateschema=None, argvalue=None, yamlfile=None, parse_arguments=True, verbose=None):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
         @type yamlfile: str, unicode, None
+        @type yamlstr: str, unicode, None
         @type parse_arguments: bool
         @type verbose: bool, None
         @type argvalue: str, unicode, None
         @return: None
         """
-
-
         self.m_verbose = verbose
         self.m_once = None
         self.write = None
@@ -360,6 +364,8 @@ class Arguments(object):
 
         if yamlfile:
             self.from_yaml_file(yamlfile)
+        elif yamlstr:
+            self.from_yaml(yamlstr)
         elif parse_arguments is True:
             self.parse_arguments(self.m_schema)
 
@@ -428,17 +434,17 @@ class Arguments(object):
             validate_arguments = dict((x.replace("<", "").replace(">", "").replace("--", "").replace("-", "_"), y) for x, y in arguments.viewitems())
 
             if self.m_schema is not None:
+                schema_keys = self.m_schema.get_keys()
+
+                for k in validate_arguments.keys():
+                    if k not in schema_keys:
+                        self.m_schema.add_void_schema_item(k)
                 self.m_schema.validate(validate_arguments)
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.viewitems())
         except SchemaError as e:
-            if "lambda" in str(e):
-                err = "Error: giturl should end with .git"
-            else:
-                err = ""
-
             consoledict(validate_arguments)
-            handle_ex(e, extra_info=err)
+            handle_ex(e)
 
         if self.m_verbose:
             print self.arguments_for_console(arguments)
@@ -588,6 +594,10 @@ class Arguments(object):
                 return key, element
 
         for k, v in dictionary.iteritems():
+            if hasattr(v, "strip"):
+                v = v.strip("'")
+                v = v.strip('"')
+
             setattr(self, k, v)
 
     @staticmethod

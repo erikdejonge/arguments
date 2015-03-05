@@ -21,12 +21,12 @@ optionsdoc = """
 arguments test
 
 Usage:
-  tests.py <posarg1> <posarg2>
+  tests.py [options] <posarg1> <posarg2>
 
 Options:
   -h --help                     Show this screen.
   -o --option=<option1>         An option.
-  --option2=<option2>           An option [default: hello].
+  --opt2=<option2>              An option [default: hello].
   -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
   -v --verbose                  Folder from where to run the command [default: .].
 """
@@ -61,7 +61,7 @@ class ArgumentTest(unittest.TestCase):
 
         self.assertIsNotNone(exit_ex)
 
-        retval = "Usage:\n  tests.py <posarg1> <posarg2>"
+        retval = "Usage:\n  tests.py [options] <posarg1> <posarg2>"
         self.assertEqual(exit_ex.usage.strip(), retval.strip())
 
     def test_constructor_posargs(self):
@@ -81,23 +81,29 @@ class ArgumentTest(unittest.TestCase):
         self.assertEqual(args.posarg1, "posval1")
         self.assertEqual(args.posarg2, "posval2")
 
-
     def test_constructor_noschema(self):
         """
         test_parse_args
         """
-
-        exit_ex = None
         args = None
-        try:
-            args = Arguments(doc=optionsdoc, argvalue=['posval1', 'posval2'])
-        except DocoptExit as de:
-            exit_ex = de
+        inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
 
-        self.assertIsNone(exit_ex)
+        args = Arguments(doc=optionsdoc, argvalue=inputval)
         self.assertIsNotNone(args)
-        self.assertEqual(args.posarg1, "posval1")
-        self.assertEqual(args.posarg2, "posval2")
+        self.assertEqual(args.posarg1, "aa")
+        self.assertEqual(args.posarg2, "bb")
+        self.assertEqual(args.option, "4")
+        self.assertEqual(args.opt2, "foobar")
+
+    def test_yaml(self):
+
+
+        inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
+
+        args = Arguments(doc=optionsdoc, argvalue=inputval)
+        yaml = args.as_yaml()
+        args2 = Arguments(yamlstr=yaml)
+        self.assertEqual(args.as_yaml(), args2.as_yaml())
 
 def main():
     """
@@ -116,7 +122,9 @@ def main():
 
     """
 
-    # arguments = docopt(__doc__)
+    #import sys
+    #arguments = docopt(optionsdoc)
+    # print "---"
     # print arguments
     unit_test_main(globals())
 
