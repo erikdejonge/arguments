@@ -337,7 +337,7 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc, validateschema, argvalue=None, yamlfile=None, parse_arguments=True, verbose=None):
+    def __init__(self, doc, validateschema=None, argvalue=None, yamlfile=None, parse_arguments=True, verbose=None):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
@@ -347,8 +347,7 @@ class Arguments(object):
         @type argvalue: str, unicode, None
         @return: None
         """
-        if validateschema is None:
-            raise AssertionError("no validateschema")
+
 
         self.m_verbose = verbose
         self.m_once = None

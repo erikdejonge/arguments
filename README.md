@@ -7,6 +7,44 @@ Argument parser based on docopt
 pip install arguments
 ```
 
+##usage
+Docopt is used for parsing the docstring (__doc__), arguments bundles the schema parser and returns a OptionParser like object with normalized attributes
+
+For example
+```
+arguments test
+
+Usage:
+  tests.py <posarg1> <posarg2>
+
+Options:
+  -h --help                     Show this screen.
+  -o --option=<option1>         An option.
+  --option2=<option2>           An option [default: hello].
+  -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
+  -v --verbose                  Folder from where to run the command [default: .].
+```
+
+called like
+
+```bash
+python tests.py pval1 pval2
+```
+
+will when called in python return
+
+```python
+>>> myargs = Arguments()
+>>> print myargs.posarg1
+pyval1
+
+>>> print myargs.posarg2
+pyval2
+```
+
+
+
+
 
 ##Using schema
 Assume you are using **docopt** with the following usage-pattern:
