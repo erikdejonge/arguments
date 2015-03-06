@@ -1,12 +1,12 @@
 # coding=utf-8
 """
 appinstance
-erik@a8.nl (04-03-15)
+Active8 (04-03-15)
 license: GNU-GPL2
 """
 from setuptools import setup
 setup(name='arguments',
-      version='3',
+      version='4',
       description='Argument parser based on docopt',
       url='https://github.com/erikdejonge/arguments',
       author='Erik de Jonge',

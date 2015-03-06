@@ -1,7 +1,7 @@
 # coding=utf-8
 """
 arguments
-erik@a8.nl (04-03-15)
+Active8 (04-03-15)
 license: GNU-GPL2
 """
 # noinspection PyUnresolvedReferences
@@ -337,6 +337,14 @@ class Optional(Schema):
             self.key = self._schema
 
 
+def not_exists(path):
+    """
+    @type path: str, unicode
+    @return: None
+    """
+    return not exists(path)
+
+
 class Arguments(object):
     """
     Argument dict to boject
@@ -554,7 +562,7 @@ class Arguments(object):
         @type path: str, unicode
         @return: None
         """
-        return not exists(path)
+        return not_exists(path)
 
     def for_print(self):
         """
