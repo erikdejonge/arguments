@@ -12,7 +12,7 @@ from future import standard_library
 standard_library.install_aliases()
 from setuptools import setup
 setup(name='arguments',
-      version='12',
+      version='13',
       description='Argument parser based on docopt',
       url='https://github.com/erikdejonge/arguments',
       author='Erik de Jonge',
