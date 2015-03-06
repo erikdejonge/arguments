@@ -103,6 +103,17 @@ class ArgumentTest(unittest.TestCase):
         args2 = Arguments(yamlstr=yamls)
         self.assertEqual(args.as_yaml(), args2.as_yaml())
 
+    def test_numbers(self):
+        """
+        test_parse_args
+        """
+        myschema = Schema({"option": Or(int), "posarg2": Or(str)})
+        inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
+        args = Arguments(doc=optionsdoc, argvalue=inputval)
+        self.assertIsNotNone(args)
+        self.assertEqual(args.option, 4)
+
+
 
 def main():
     """

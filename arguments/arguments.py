@@ -399,7 +399,10 @@ class Arguments(object):
 
         if self.load is None:
             if self.m_doc is None:
-                self.m_doc = __doc__
+
+                import __main__
+
+                self.m_doc = __main__.__doc__
 
             self.m_doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
   -l --load=<loadymlpath>\tLoad arguments yaml file.
@@ -474,7 +477,11 @@ class Arguments(object):
         elif v == "true":
             v = "True"
 
+
         num = v.isdigit()
+        if not num:
+            v.replace("'", "").replace('"', "")
+            num = v.isdigit()
 
         if not num:
             try:
