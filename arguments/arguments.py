@@ -477,8 +477,8 @@ class Arguments(object):
         elif v == "true":
             v = "True"
 
-
         num = v.isdigit()
+
         if not num:
             v.replace("'", "").replace('"', "")
             num = v.isdigit()
@@ -614,6 +614,20 @@ class Arguments(object):
         posarg = {}
 
         for k in arguments:
+            try:
+                possnum = arguments[k]
+
+                if isinstance(possnum, str):
+                    possnum = possnum.replace("'", "").replace('"', '')
+
+                    if "." in possnum:
+                        arguments[k] = float(possnum)
+                    else:
+                        arguments[k] = int(possnum)
+
+            except ValueError:
+                pass
+
             key = k.replace("pa_", "").replace("op_", "").strip()
 
             if len(key) > 0:
@@ -622,17 +636,6 @@ class Arguments(object):
 
                 if k.startswith("op_"):
                     opts[k.replace("op_", "")] = arguments[k]
-            try:
-                possnum = arguments[k]
-
-                if isinstance(possnum, str):
-                    if "." in possnum:
-                        arguments[k] = float(possnum)
-                    else:
-                        arguments[k] = int(possnum)
-
-            except ValueError:
-                pass
 
         return opts, posarg
 

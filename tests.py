@@ -90,7 +90,7 @@ class ArgumentTest(unittest.TestCase):
         self.assertIsNotNone(args)
         self.assertEqual(args.posarg1, "aa")
         self.assertEqual(args.posarg2, "bb")
-        self.assertEqual(args.option, "4")
+        self.assertEqual(args.option, 4)
         self.assertEqual(args.opt2, "foobar")
 
     def test_yaml(self):
