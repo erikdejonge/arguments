@@ -20,4 +20,14 @@ setup(name='arguments',
       license='GPL',
       packages=['arguments'],
       zip_safe=True,
-      install_requires=['docopt', 'schema', 'consoleprinter'])
+      install_requires=['docopt', 'schema', 'consoleprinter'],
+      classifiers=[
+          "Programming Language :: Python",
+          "Programming Language :: Python :: 3",
+          "Development Status :: Beta",
+          "Intended Audience :: Developers",
+          "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+          "Operating System :: POSIX",
+          "Topic :: Software Development :: Libraries :: Python Modules",
+          "Topic :: System",
+      ])
