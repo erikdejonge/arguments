@@ -17,13 +17,13 @@ standard_library.install_aliases()
 from builtins import str
 from builtins import range
 from builtins import object
+
 # noinspection PyUnresolvedReferences
 try:
     from docopt import DocoptExit, docopt
 except ImportError as e:
     print("falling back on fallbackdocopt")
     from fallbackdocopt import DocoptExit, docopt
-
 import os
 import yaml
 from os.path import exists, expanduser
@@ -421,9 +421,7 @@ class Arguments(object):
 
                 self.m_doc = __main__.__doc__
 
-            self.m_doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
-  -l --load=<loadymlpath>\tLoad arguments yaml file.
-"""
+            self.m_doc += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
             arguments = dict(docopt(self.m_doc, self.m_argv))
             k = ""
             try:
@@ -598,7 +596,12 @@ class Arguments(object):
         """
         __str__
         """
-        return "---\n" + yaml.dump(self.m_reprdict, default_flow_style=False).replace("!!python/unicode", "")
+        s =  (str(self.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(self))
+
+        s += "\n"
+        s += consoledict(self.m_reprdict, printval=False)
+        return s
+
 
     def _set_fields(self, positional, options):
         """
