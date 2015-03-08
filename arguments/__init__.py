@@ -598,7 +598,7 @@ class Arguments(object):
         """
         __str__
         """
-        return self.__repr__()
+        return "---\n" + yaml.dump(self.m_reprdict, default_flow_style=False).replace("!!python/unicode", "")
 
     def _set_fields(self, positional, options):
         """
