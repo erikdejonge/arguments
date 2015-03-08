@@ -18,7 +18,11 @@ from builtins import str
 from builtins import range
 from builtins import object
 # noinspection PyUnresolvedReferences
-from docopt import DocoptExit, docopt
+try:
+    from docopt import DocoptExit, docopt
+except ImportError as e:
+    print("falling back on fallbackdocopt")
+    from fallbackdocopt import DocoptExit, docopt
 
 import os
 import yaml
