@@ -405,7 +405,9 @@ class Arguments(object):
 
         if yamlfile:
             raise AssertionError("not implemented")
-
+    @property
+    def verbose(self):
+        return self.m_verbose
     def parse_arguments(self, schema=True):
         """
         @type schema: Schema
