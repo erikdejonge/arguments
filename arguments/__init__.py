@@ -113,9 +113,7 @@ class Or(And):
                 return s.validate(data)
             except SchemaError as _x:
                 x = _x
-        raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos,
-
-                          [self._error] + x.errors)
+        raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos, [self._error] + x.errors)
 
 
 class Use(object):
@@ -268,9 +266,7 @@ class Schema(object):
                     new[nkey] = nvalue
                 elif skey is not None:
                     if x is not None:
-                        raise SchemaError(['invalid value for key %r' % key] +
-
-                                          x.autos, [e] + x.errors)
+                        raise SchemaError(['invalid value for key %r' % key] + x.autos, [e] + x.errors)
 
             required = set(k for k in s if not isinstance(k, Optional))
             if coverage != required:
@@ -509,7 +505,7 @@ class Arguments(object):
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
             consoledict(validate_arguments)
-            handle_ex(e)
+            console_exception(e)
 
         if self.m_verbose:
             print(self.arguments_for_console(arguments))
