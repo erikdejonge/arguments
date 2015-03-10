@@ -41,25 +41,40 @@ if __name__ == "__main__":
     main()
 ```
 
-called like
+gives
 
 ```bash
-python tests.py pval1 pval2
+$ python main.py pval1 pval2
+<arguments.Arguments object at 0x1022e0eb8>
+options :
+    opt2 : hello
+    option : None
+    parameter : 77
+    help : False
+    verbose : False
+positional :
+    posarg1 : pval1
+    posarg2 : pval2
 ```
 
-will when called in python return
+or
 
-```python
->>> myargs = Arguments()
->>> print myargs.posarg1
-pyval1
+```bash
+$ python main.py -h
+arguments test
 
->>> print myargs.posarg2
-pyval2
+Usage:
+  tests.py [options] <posarg1> <posarg2>
+
+Options:
+  -h --help                     Show this screen.
+  -o --option=<option1>         An option.
+  --opt2=<option2>              An option [default: hello].
+  -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
+  -v --verbose                  Folder from where to run the command [default: .].
+
+$
 ```
-
-
-
 
 
 ##Using schema
