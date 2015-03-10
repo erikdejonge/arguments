@@ -19,8 +19,8 @@ def main():
     """
     main
     """
-    args = Arguments()
-    print(args)
+    args = Arguments(alwaysfullhelp=True)
+
 
 
 if __name__ == "__main__":

@@ -362,7 +362,7 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None, persistoption=False):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None, persistoption=False, alwaysfullhelp=False):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
@@ -382,6 +382,7 @@ class Arguments(object):
         self.m_doc = doc
         self.m_argv = argvalue
         self.m_persistoption = persistoption
+        self.m_alwaysfullhelp = alwaysfullhelp
 
         if yamlfile:
             self.from_yaml_file(yamlfile)
@@ -456,8 +457,14 @@ class Arguments(object):
                 console(optsplit)
 
             self.m_doc += "\n"
-
-            arguments = dict(docopt(self.m_doc, self.m_argv))
+            try:
+                arguments = dict(docopt(self.m_doc, self.m_argv))
+            except DocoptExit:
+                if self.m_alwaysfullhelp is True:
+                    print(self.m_doc.strip())
+                    exit(1)
+                else:
+                    raise
             k = ""
             try:
                 for k in arguments:
@@ -504,7 +511,8 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            console("SchemaError", "".join([x for x in e.errors if x]), color="red")
+            console("SchemaError", "".join([x for x in e.errors if x]), color="red", plainprint=True)
+            print(self.m_doc.strip())
             exit(1)
         if self.m_verbose:
             print(self.arguments_for_console(arguments))
