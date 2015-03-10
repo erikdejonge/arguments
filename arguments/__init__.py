@@ -393,11 +393,15 @@ class Arguments(object):
             self.from_yaml(yamlstr)
         elif parse_arguments is True:
             parsedok = False
+            exdoc = False
             try:
                 self.parse_arguments(self.m_schema)
                 parsedok = True
+            except DocoptExit:
+                exdoc = True
+                raise
             finally:
-                if parsedok is False:
+                if parsedok is False and exdoc is False:
                     print()
 
             if self.write is not None:
@@ -456,6 +460,7 @@ class Arguments(object):
                 console(optsplit)
 
             self.m_doc += "\n"
+
             arguments = dict(docopt(self.m_doc, self.m_argv))
             k = ""
             try:
