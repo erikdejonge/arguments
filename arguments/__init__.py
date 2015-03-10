@@ -19,11 +19,10 @@ from builtins import range
 from builtins import object
 
 # noinspection PyUnresolvedReferences
-try:
-    from docopt import DocoptExit, docopt
-except ImportError as e:
-    print("falling back on fallbackdocopt")
-    from fallbackdocopt import DocoptExit, docopt
+
+from fallbackdocopt import DocoptExit, docopt
+
+
 import os
 import yaml
 from os.path import exists, expanduser
@@ -387,12 +386,19 @@ class Arguments(object):
         self.m_doc = doc
         self.m_argv = argvalue
         self.m_persistoption = persistoption
+
         if yamlfile:
             self.from_yaml_file(yamlfile)
         elif yamlstr:
             self.from_yaml(yamlstr)
         elif parse_arguments is True:
-            self.parse_arguments(self.m_schema)
+            parsedok = False
+            try:
+                self.parse_arguments(self.m_schema)
+                parsedok = True
+            finally:
+                if parsedok is False:
+                    print()
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -441,8 +447,15 @@ class Arguments(object):
                 import __main__
 
                 self.m_doc = __main__.__doc__
+
             if self.m_persistoption is True:
-                self.m_doc += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
+                optsplit = self.m_doc.split("Options:")
+                optsplit[0] += "Options:\n"
+                optsplit[0] += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
+                self.m_doc = "".join(optsplit)
+                console(optsplit)
+
+            self.m_doc += "\n"
             arguments = dict(docopt(self.m_doc, self.m_argv))
             k = ""
             try:
