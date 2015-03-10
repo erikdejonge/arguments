@@ -504,8 +504,8 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            console_exception(e)
-
+            console("SchemaError", "".join([x for x in e.errors if x]), color="red")
+            exit(1)
         if self.m_verbose:
             print(self.arguments_for_console(arguments))
 
