@@ -27,7 +27,7 @@ except ImportError as e:
 import os
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict
+from consoleprinter import console, handle_ex, consoledict, console_exception
 
 
 class SchemaError(Exception):
@@ -405,9 +405,28 @@ class Arguments(object):
 
         if yamlfile:
             raise AssertionError("not implemented")
+
     @property
     def verbose(self):
+        """
+        verbose
+        """
         return self.m_verbose
+
+    @verbose.setter
+    def verbose(self, v):
+        """
+        verbose
+        """
+        self.m_verbose = v
+
+    @verbose.setter
+    def verbose(self, v):
+        """
+        verbose
+        """
+        self.m_verbose = v
+
     def parse_arguments(self, schema=True):
         """
         @type schema: Schema
@@ -598,12 +617,10 @@ class Arguments(object):
         """
         __str__
         """
-        s =  (str(self.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(self))
-
+        s = (str(self.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(self))
         s += "\n"
         s += consoledict(self.m_reprdict, printval=False)
         return s
-
 
     def _set_fields(self, positional, options):
         """
@@ -624,7 +641,7 @@ class Arguments(object):
                 v = v.strip("'")
                 v = v.strip('"')
 
-            setattr(self, k, v)
+            setattr(self, str(k), v)
 
     @staticmethod
     def sort_arguments(arguments):
