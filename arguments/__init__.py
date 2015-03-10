@@ -457,9 +457,11 @@ class Arguments(object):
                 console(optsplit)
 
             self.m_doc += "\n"
+            arguments = None
             try:
-                arguments = dict(docopt(self.m_doc, self.m_argv))
+                arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True))
             except DocoptExit:
+
                 if self.m_alwaysfullhelp is True:
                     print(self.m_doc.strip())
                     exit(1)
