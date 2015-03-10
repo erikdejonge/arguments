@@ -504,7 +504,6 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            consoledict(validate_arguments)
             console_exception(e)
 
         if self.m_verbose:
