@@ -367,7 +367,7 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None, persistoption=False):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
@@ -386,7 +386,7 @@ class Arguments(object):
         self.m_reprdict = {}
         self.m_doc = doc
         self.m_argv = argvalue
-
+        self.m_persistoption = persistoption
         if yamlfile:
             self.from_yaml_file(yamlfile)
         elif yamlstr:
@@ -441,8 +441,8 @@ class Arguments(object):
                 import __main__
 
                 self.m_doc = __main__.__doc__
-
-            self.m_doc += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
+            if self.m_persistoption is True:
+                self.m_doc += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
             arguments = dict(docopt(self.m_doc, self.m_argv))
             k = ""
             try:
