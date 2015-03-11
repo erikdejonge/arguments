@@ -25,9 +25,21 @@ def raises_error(*args, **kwds):
 
 optionsdoc = """
 arguments test
-
 Usage:
   tests.py [options] <posarg1> <posarg2>
+
+Options:
+  -h --help                     Show this screen.
+  -o --option=<option1>         An option.
+  --opt2=<option2>              An option [default: hello].
+  -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
+  -v --verbose                  Folder from where to run the command [default: .].
+"""
+
+optionsdoc2 = """
+arguments context test
+Usage:
+  tests.py contextindicator [options] <posarg1> <posarg2>
 
 Options:
   -h --help                     Show this screen.
@@ -89,7 +101,7 @@ class ArgumentTest(unittest.TestCase):
 
     def test_constructor_noschema(self):
         """
-        test_parse_args
+        test_constructor_noschema
         """
         inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
         args = Arguments(doc=optionsdoc, argvalue=inputval)
@@ -111,14 +123,23 @@ class ArgumentTest(unittest.TestCase):
 
     def test_numbers(self):
         """
-        test_parse_args
+        test_numbers
         """
-        myschema = Schema({"option": Or(int), "posarg2": Or(str)})
         inputval = ['-o', '4', "--opt2='foobar'", 'aa', 'bb']
         args = Arguments(doc=optionsdoc, argvalue=inputval)
         self.assertIsNotNone(args)
         self.assertEqual(args.option, 4)
 
+    def test_context(self):
+        """
+        test_context
+        """
+        inputval = ['-o', '4', 'contextindicator', 'bb', 'aa']
+        args = Arguments(doc=optionsdoc2, argvalue=inputval)
+        self.assertIsNotNone(args)
+        self.assertEqual(args.option, 4)
+        self.assertTrue(args.contextindicator)
+        print(args)
 
 
 def main():

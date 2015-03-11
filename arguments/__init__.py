@@ -12,6 +12,7 @@ from builtins import super
 from builtins import dict
 from builtins import open
 from builtins import int
+
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str
@@ -19,14 +20,12 @@ from builtins import range
 from builtins import object
 
 # noinspection PyUnresolvedReferences
-
 from fallbackdocopt import DocoptExit, docopt
-
 
 import os
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict, console_exception
+from consoleprinter import console, handle_ex, consoledict
 
 
 class SchemaError(Exception):
@@ -397,6 +396,7 @@ class Arguments(object):
             except DocoptExit:
                 exdoc = True
                 raise
+
             finally:
                 if parsedok is False and exdoc is False:
                     print()
@@ -423,14 +423,16 @@ class Arguments(object):
     @verbose.setter
     def verbose(self, v):
         """
-        verbose
+        @type v: str, unicode
+        @return: None
         """
         self.m_verbose = v
 
     @verbose.setter
     def verbose(self, v):
         """
-        verbose
+        @type v: str, unicode
+        @return: None
         """
         self.m_verbose = v
 
@@ -439,11 +441,14 @@ class Arguments(object):
         @type schema: Schema
         @return: None
         """
+        arguments = None
+
         if schema is not None:
             self.m_schema = schema
 
         if self.load is None:
             if self.m_doc is None:
+                # noinspection PyUnresolvedReferences
 
                 import __main__
 
@@ -457,47 +462,54 @@ class Arguments(object):
                 console(optsplit)
 
             self.m_doc += "\n"
-            arguments = None
             try:
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True))
             except DocoptExit:
-
                 if self.m_alwaysfullhelp is True:
                     print(self.m_doc.strip())
                     exit(1)
                 else:
                     raise
+
             k = ""
             try:
-                for k in arguments:
-                    if "folder" in k or "path" in k:
-                        if hasattr(arguments[k], "replace"):
-                            arguments[k] = arguments[k].replace("~", expanduser("~"))
+                if isinstance(arguments, dict):
+                    for k in arguments:
+                        if "folder" in k or "path" in k:
+                            if hasattr(arguments[k], "replace"):
+                                arguments[k] = arguments[k].replace("~", expanduser("~"))
 
-                            if arguments[k].strip() == ".":
-                                arguments[k] = os.getcwdu()
+                                if arguments[k].strip() == ".":
+                                    arguments[k] = os.getcwdu()
 
-                            if "./" in arguments[k].strip():
-                                arguments[k] = arguments[k].replace("./", os.getcwdu() + "/")
+                                if "./" in arguments[k].strip():
+                                    arguments[k] = arguments[k].replace("./", os.getcwdu() + "/")
 
-                            arguments[k] = arguments[k].rstrip("/").strip()
+                                arguments[k] = arguments[k].rstrip("/").strip()
 
             except AttributeError as e:
                 console("Attribute error:" + k.strip(), "->", str(e), color="red")
-                for k in arguments:
-                    console(k.strip(), color="red")
+
+                if isinstance(arguments, dict):
+                    for k in arguments:
+                        console(k.strip(), color="red")
 
                 handle_ex(e)
         else:
-            loaded_arguments = yaml.load(open(self.load))
-            arguments = {}
-            for k in loaded_arguments["options"]:
-                arguments["op_" + k] = loaded_arguments["options"][k]
-            for k in loaded_arguments["positional"]:
-                arguments["pa_" + k] = loaded_arguments["positional"][k]
-
-        validate_arguments = {}
+            if isinstance(self.load, str):
+                # noinspection PyTypeChecker
+                loaded_arguments = yaml.load(open(self.load))
+                arguments = {}
+                for k in loaded_arguments["options"]:
+                    arguments["op_" + k] = loaded_arguments["options"][k]
+                for k in loaded_arguments["positional"]:
+                    arguments["pa_" + k] = loaded_arguments["positional"][k]
+            else:
+                console("self.load is not a str", self.load, color="red")
         try:
+            if not isinstance(arguments, dict):
+                raise AssertionError("arguments should be a dict by now")
+
             if "--" in arguments:
                 del arguments["--"]
 
@@ -516,6 +528,7 @@ class Arguments(object):
             console("SchemaError", "".join([x for x in e.errors if x]), color="red", plainprint=True)
             print(self.m_doc.strip())
             exit(1)
+
         if self.m_verbose:
             print(self.arguments_for_console(arguments))
 
