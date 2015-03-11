@@ -12,7 +12,6 @@ from builtins import super
 from builtins import dict
 from builtins import open
 from builtins import int
-
 from future import standard_library
 standard_library.install_aliases()
 from builtins import str
@@ -25,7 +24,7 @@ from fallbackdocopt import DocoptExit, docopt
 import os
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict
+from consoleprinter import console, handle_ex, consoledict, get_print_yaml, colorize_for_print
 
 
 class SchemaError(Exception):
@@ -361,18 +360,18 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None, persistoption=False, alwaysfullhelp=False):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
         @type yamlfile: str, unicode, None
         @type yamlstr: str, unicode, None
         @type parse_arguments: bool
-        @type verbose: bool, None
+
         @type argvalue: str, unicode, None
         @return: None
         """
-        self.m_verbose = verbose
+
         self.m_once = None
         self.write = None
         self.load = None
@@ -412,29 +411,6 @@ class Arguments(object):
 
         if yamlfile:
             raise AssertionError("not implemented")
-
-    @property
-    def verbose(self):
-        """
-        verbose
-        """
-        return self.m_verbose
-
-    @verbose.setter
-    def verbose(self, v):
-        """
-        @type v: str, unicode
-        @return: None
-        """
-        self.m_verbose = v
-
-    @verbose.setter
-    def verbose(self, v):
-        """
-        @type v: str, unicode
-        @return: None
-        """
-        self.m_verbose = v
 
     def parse_arguments(self, schema=True):
         """
@@ -480,10 +456,10 @@ class Arguments(object):
                                 arguments[k] = arguments[k].replace("~", expanduser("~"))
 
                                 if arguments[k].strip() == ".":
-                                    arguments[k] = os.getcwdu()
+                                    arguments[k] = os.getcwd()
 
                                 if "./" in arguments[k].strip():
-                                    arguments[k] = arguments[k].replace("./", os.getcwdu() + "/")
+                                    arguments[k] = arguments[k].replace("./", os.getcwd() + "/")
 
                                 arguments[k] = arguments[k].rstrip("/").strip()
 
@@ -529,111 +505,9 @@ class Arguments(object):
             print(self.m_doc.strip())
             exit(1)
 
-        if self.m_verbose:
-            print(self.arguments_for_console(arguments))
 
         options, positional_arguments = self.sort_arguments(arguments)
         self._set_fields(positional_arguments, options)
-
-    @staticmethod
-    def colorize_for_print(v):
-        """
-        @type v: str, unicode
-        @return: None
-        """
-        s = ""
-        v = v.strip()
-
-        if v == "false":
-            v = "False"
-        elif v == "true":
-            v = "True"
-
-        num = v.isdigit()
-
-        if not num:
-            v.replace("'", "").replace('"', "")
-            num = v.isdigit()
-
-        if not num:
-            try:
-                v2 = v.replace("'", "").replace('"', "")
-                num = float(v2)
-                num = True
-                v = v2
-            except ValueError:
-                pass
-
-        ispath = exists(v)
-
-        if num is True:
-            s += "\033[93m" + v + "\033[0m"
-        elif ispath is True:
-            s += "\033[35m" + v + "\033[0m"
-        elif v == "False":
-            s += "\033[31m" + v + "\033[0m"
-        elif v == "True":
-            s += "\033[32m" + v + "\033[0m"
-        else:
-            s += "\033[33m" + v + "\033[0m"
-
-        return s
-
-    def dictionary_for_console(self, argdict, indent=""):
-        """
-        @type argdict: dict
-        @type indent: str
-        @return: sp
-        """
-        keys = list(argdict.keys())
-        keys.sort(key=lambda x: len(x))
-        sp = ""
-        lk = 0
-        ls = []
-
-        for k in keys:
-            s = indent + "\033[36m" + k + "`: " + "\033[0m"
-            v = str(argdict[k]).strip()
-            s += self.colorize_for_print(v)
-            ls.append((len(k), s))
-
-            if len(k) > lk:
-                lk = len(k)
-
-        for lns, s in ls:
-            s = s.replace("`", " " * (1 + (lk - lns)))
-            sp += s
-
-        return sp
-
-    def get_print_yaml(self, yamlstring):
-        """
-        @type yamlstring: str, unicode
-        @return: None
-        """
-        s = ""
-
-        for i in yamlstring.split("\n"):
-            ls = [x for x in i.split(":") if x]
-            cnt = 0
-
-            if len(ls) > 1:
-                for ii in ls:
-                    if cnt == 0:
-                        s += "\033[36m" + ii + ": " + "\033[0m"
-                    else:
-                        s += self.colorize_for_print(ii)
-
-                    cnt += 1
-            else:
-                if i.strip().startswith("---"):
-                    s += "\033[95m" + i + "\033[0m"
-                else:
-                    s += "\033[91m" + i + "\033[0m"
-
-            s += "\n"
-
-        return s.strip()
 
     @staticmethod
     def not_exists(path):
@@ -647,7 +521,13 @@ class Arguments(object):
         """
         for_print
         """
-        return self.get_print_yaml(self.as_yaml())
+        return self.as_string()
+
+    def as_string(self):
+        """
+        as_string
+        """
+        return get_print_yaml(self.as_yaml())
 
     def __str__(self):
         """
@@ -713,29 +593,6 @@ class Arguments(object):
                     opts[k.replace("op_", "")] = arguments[k]
 
         return opts, posarg
-
-    def arguments_for_console(self, arguments):
-        """
-        @type arguments: dict
-        @return: None
-        """
-        s = ""
-        opts, posarg = self.sort_arguments(arguments)
-        newline = False
-
-        if posarg:
-            s += "\033[91mPositional arguments:\033[0m"
-            s += self.dictionary_for_console(posarg, "\n  ")
-            newline = True
-
-        if opts:
-            if newline:
-                s += "\n\n"
-
-            s += "\033[91mOptions:\033[0m"
-            s += self.dictionary_for_console(opts, "\n  ")
-
-        return s + "\n"
 
     def as_yaml(self):
         """
