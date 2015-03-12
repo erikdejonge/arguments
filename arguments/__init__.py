@@ -17,17 +17,14 @@ standard_library.install_aliases()
 from builtins import str
 from builtins import range
 from builtins import object
+
 # noinspection PyUnresolvedReferences
-try:
-    from docopt import DocoptExit, docopt
-except ImportError as e:
-    print("falling back on fallbackdocopt")
-    from fallbackdocopt import DocoptExit, docopt
+from fallbackdocopt import DocoptExit, docopt
 
 import os
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict
+from consoleprinter import console, handle_ex, consoledict, get_print_yaml, colorize_for_print
 
 
 class SchemaError(Exception):
@@ -114,9 +111,7 @@ class Or(And):
                 return s.validate(data)
             except SchemaError as _x:
                 x = _x
-        raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos,
-
-                          [self._error] + x.errors)
+        raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos, [self._error] + x.errors)
 
 
 class Use(object):
@@ -269,9 +264,7 @@ class Schema(object):
                     new[nkey] = nvalue
                 elif skey is not None:
                     if x is not None:
-                        raise SchemaError(['invalid value for key %r' % key] +
-
-                                          x.autos, [e] + x.errors)
+                        raise SchemaError(['invalid value for key %r' % key] + x.autos, [e] + x.errors)
 
             required = set(k for k in s if not isinstance(k, Optional))
             if coverage != required:
@@ -367,18 +360,18 @@ class Arguments(object):
     Argument dict to boject
     @DynamicAttrs
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, verbose=None):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
         @type yamlfile: str, unicode, None
         @type yamlstr: str, unicode, None
         @type parse_arguments: bool
-        @type verbose: bool, None
+
         @type argvalue: str, unicode, None
         @return: None
         """
-        self.m_verbose = verbose
+
         self.m_once = None
         self.write = None
         self.load = None
@@ -386,13 +379,26 @@ class Arguments(object):
         self.m_reprdict = {}
         self.m_doc = doc
         self.m_argv = argvalue
+        self.m_persistoption = persistoption
+        self.m_alwaysfullhelp = alwaysfullhelp
 
         if yamlfile:
             self.from_yaml_file(yamlfile)
         elif yamlstr:
             self.from_yaml(yamlstr)
         elif parse_arguments is True:
-            self.parse_arguments(self.m_schema)
+            parsedok = False
+            exdoc = False
+            try:
+                self.parse_arguments(self.m_schema)
+                parsedok = True
+            except DocoptExit:
+                exdoc = True
+                raise
+
+            finally:
+                if parsedok is False and exdoc is False:
+                    print()
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -411,51 +417,75 @@ class Arguments(object):
         @type schema: Schema
         @return: None
         """
+        arguments = None
+
         if schema is not None:
             self.m_schema = schema
 
         if self.load is None:
             if self.m_doc is None:
+                # noinspection PyUnresolvedReferences
 
                 import __main__
 
                 self.m_doc = __main__.__doc__
 
-            self.m_doc += """  -w --write=<writeymlpath>\tWrite arguments yaml file.
-  -l --load=<loadymlpath>\tLoad arguments yaml file.
-"""
-            arguments = dict(docopt(self.m_doc, self.m_argv))
+            if self.m_persistoption is True:
+                optsplit = self.m_doc.split("Options:")
+                optsplit[0] += "Options:\n"
+                optsplit[0] += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
+                self.m_doc = "".join(optsplit)
+                console(optsplit)
+
+            self.m_doc += "\n"
+            try:
+                arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True))
+            except DocoptExit:
+                if self.m_alwaysfullhelp is True:
+                    print(self.m_doc.strip())
+                    exit(1)
+                else:
+                    raise
+
             k = ""
             try:
-                for k in arguments:
-                    if "folder" in k or "path" in k:
-                        if hasattr(arguments[k], "replace"):
-                            arguments[k] = arguments[k].replace("~", expanduser("~"))
+                if isinstance(arguments, dict):
+                    for k in arguments:
+                        if "folder" in k or "path" in k:
+                            if hasattr(arguments[k], "replace"):
+                                arguments[k] = arguments[k].replace("~", expanduser("~"))
 
-                            if arguments[k].strip() == ".":
-                                arguments[k] = os.getcwdu()
+                                if arguments[k].strip() == ".":
+                                    arguments[k] = os.getcwd()
 
-                            if "./" in arguments[k].strip():
-                                arguments[k] = arguments[k].replace("./", os.getcwdu() + "/")
+                                if "./" in arguments[k].strip():
+                                    arguments[k] = arguments[k].replace("./", os.getcwd() + "/")
 
-                            arguments[k] = arguments[k].rstrip("/").strip()
+                                arguments[k] = arguments[k].rstrip("/").strip()
 
             except AttributeError as e:
                 console("Attribute error:" + k.strip(), "->", str(e), color="red")
-                for k in arguments:
-                    console(k.strip(), color="red")
+
+                if isinstance(arguments, dict):
+                    for k in arguments:
+                        console(k.strip(), color="red")
 
                 handle_ex(e)
         else:
-            loaded_arguments = yaml.load(open(self.load))
-            arguments = {}
-            for k in loaded_arguments["options"]:
-                arguments["op_" + k] = loaded_arguments["options"][k]
-            for k in loaded_arguments["positional"]:
-                arguments["pa_" + k] = loaded_arguments["positional"][k]
-
-        validate_arguments = {}
+            if isinstance(self.load, str):
+                # noinspection PyTypeChecker
+                loaded_arguments = yaml.load(open(self.load))
+                arguments = {}
+                for k in loaded_arguments["options"]:
+                    arguments["op_" + k] = loaded_arguments["options"][k]
+                for k in loaded_arguments["positional"]:
+                    arguments["pa_" + k] = loaded_arguments["positional"][k]
+            else:
+                console("self.load is not a str", self.load, color="red")
         try:
+            if not isinstance(arguments, dict):
+                raise AssertionError("arguments should be a dict by now")
+
             if "--" in arguments:
                 del arguments["--"]
 
@@ -471,114 +501,13 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            consoledict(validate_arguments)
-            handle_ex(e)
+            console("SchemaError", "".join([x for x in e.errors if x]), color="red", plainprint=True)
+            print(self.m_doc.strip())
+            exit(1)
 
-        if self.m_verbose:
-            print(self.arguments_for_console(arguments))
 
         options, positional_arguments = self.sort_arguments(arguments)
         self._set_fields(positional_arguments, options)
-
-    @staticmethod
-    def colorize_for_print(v):
-        """
-        @type v: str, unicode
-        @return: None
-        """
-        s = ""
-        v = v.strip()
-
-        if v == "false":
-            v = "False"
-        elif v == "true":
-            v = "True"
-
-        num = v.isdigit()
-
-        if not num:
-            v.replace("'", "").replace('"', "")
-            num = v.isdigit()
-
-        if not num:
-            try:
-                v2 = v.replace("'", "").replace('"', "")
-                num = float(v2)
-                num = True
-                v = v2
-            except ValueError:
-                pass
-
-        ispath = exists(v)
-
-        if num is True:
-            s += "\033[93m" + v + "\033[0m"
-        elif ispath is True:
-            s += "\033[35m" + v + "\033[0m"
-        elif v == "False":
-            s += "\033[31m" + v + "\033[0m"
-        elif v == "True":
-            s += "\033[32m" + v + "\033[0m"
-        else:
-            s += "\033[33m" + v + "\033[0m"
-
-        return s
-
-    def dictionary_for_console(self, argdict, indent=""):
-        """
-        @type argdict: dict
-        @type indent: str
-        @return: sp
-        """
-        keys = list(argdict.keys())
-        keys.sort(key=lambda x: len(x))
-        sp = ""
-        lk = 0
-        ls = []
-
-        for k in keys:
-            s = indent + "\033[36m" + k + "`: " + "\033[0m"
-            v = str(argdict[k]).strip()
-            s += self.colorize_for_print(v)
-            ls.append((len(k), s))
-
-            if len(k) > lk:
-                lk = len(k)
-
-        for lns, s in ls:
-            s = s.replace("`", " " * (1 + (lk - lns)))
-            sp += s
-
-        return sp
-
-    def get_print_yaml(self, yamlstring):
-        """
-        @type yamlstring: str, unicode
-        @return: None
-        """
-        s = ""
-
-        for i in yamlstring.split("\n"):
-            ls = [x for x in i.split(":") if x]
-            cnt = 0
-
-            if len(ls) > 1:
-                for ii in ls:
-                    if cnt == 0:
-                        s += "\033[36m" + ii + ": " + "\033[0m"
-                    else:
-                        s += self.colorize_for_print(ii)
-
-                    cnt += 1
-            else:
-                if i.strip().startswith("---"):
-                    s += "\033[95m" + i + "\033[0m"
-                else:
-                    s += "\033[91m" + i + "\033[0m"
-
-            s += "\n"
-
-        return s.strip()
 
     @staticmethod
     def not_exists(path):
@@ -592,13 +521,22 @@ class Arguments(object):
         """
         for_print
         """
-        return self.get_print_yaml(self.as_yaml())
+        return self.as_string()
+
+    def as_string(self):
+        """
+        as_string
+        """
+        return get_print_yaml(self.as_yaml())
 
     def __str__(self):
         """
         __str__
         """
-        return self.__repr__()
+        s = (str(self.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(self))
+        s += "\n"
+        s += consoledict(self.m_reprdict, printval=False)
+        return s
 
     def _set_fields(self, positional, options):
         """
@@ -619,7 +557,7 @@ class Arguments(object):
                 v = v.strip("'")
                 v = v.strip('"')
 
-            setattr(self, k, v)
+            setattr(self, str(k), v)
 
     @staticmethod
     def sort_arguments(arguments):
@@ -655,29 +593,6 @@ class Arguments(object):
                     opts[k.replace("op_", "")] = arguments[k]
 
         return opts, posarg
-
-    def arguments_for_console(self, arguments):
-        """
-        @type arguments: dict
-        @return: None
-        """
-        s = ""
-        opts, posarg = self.sort_arguments(arguments)
-        newline = False
-
-        if posarg:
-            s += "\033[91mPositional arguments:\033[0m"
-            s += self.dictionary_for_console(posarg, "\n  ")
-            newline = True
-
-        if opts:
-            if newline:
-                s += "\n\n"
-
-            s += "\033[91mOptions:\033[0m"
-            s += self.dictionary_for_console(opts, "\n  ")
-
-        return s + "\n"
 
     def as_yaml(self):
         """
