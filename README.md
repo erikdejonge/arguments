@@ -57,30 +57,12 @@ positional :
     posarg2 : pval2
 ```
 
-or
-
-```bash
-$ python main.py -h
-arguments test
-
-Usage:
-  tests.py [options] <posarg1> <posarg2>
-
-Options:
-  -h --help                     Show this screen.
-  -o --option=<option1>         An option.
-  --opt2=<option2>              An option [default: hello].
-  -p --parameter=<parameter>    Folder to check the git repos out [default: 77].
-  -v --verbose                  Folder from where to run the command [default: .].
-
-$
-```
 
 ##usage with classes
 
 A nested docker style commandline program
 
-```python
+```python3
 """
 File tooltest.py
 """
@@ -88,33 +70,26 @@ File tooltest.py
 import arguments
 from arguments import Schema, Use, SchemaError
 
+
 class BaseArguments(arguments.Arguments):
-    def __init__(self, doc, validateschema):
+    """
+    Default initializations for this program (no schema validateion)
+    """
+    def __init__(self, doc):
         argvalue = None
         yamlstr = None
         yamlfile = None
         parse_arguments = True
         persistoption = False
         alwaysfullhelp = False
+        validateschema = None
         super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp)
+
 
 class MainArguments(BaseArguments):
     """
-    MainArguments
+    First level of the commandline hierarchy
     """
-    @staticmethod
-    def validtool(cmd):
-        """
-        @type cmd: str, unicode
-        @return: None
-        """
-        validtools = ["tool1", "tool2", "tool3"]
-
-        if cmd.strip().lower() not in validtools:
-            raise SchemaError("tool", "*" + cmd + "* is not a valid tool")
-
-        return cmd.strip()
-
     def __init__(self):
         doc = """
             Some tools.
@@ -128,33 +103,18 @@ class MainArguments(BaseArguments):
             Commands:
                 tool1   Bla bla bla
                 tool2   Bla bla bla
-                tool3   Bla bla bla
         """
-        validateschema = Schema({'tool': Use(self.validtool)})
         self.tool = ""
-        super().__init__(doc, validateschema)
+        super().__init__(doc)
 
 
 class Tool1Arguments(BaseArguments):
     """
-    MainArguments
+    Tool1, second level of the commandline hierarchy
     """
-    @staticmethod
-    def validtool(cmd):
-        """
-        @type cmd: str, unicode
-        @return: None
-        """
-        validtools = ["run", "build"]
-
-        if cmd.strip().lower() not in validtools:
-            raise SchemaError("tool", "*" + cmd + "* is not a valid tool")
-
-        return cmd.strip()
-
     def __init__(self):
         doc = """
-            Tool 1 .
+            Tool 1
             Usage:
                 tools tool1 [options] [--] <command> [<args>...]
 
@@ -166,9 +126,30 @@ class Tool1Arguments(BaseArguments):
                 run     Run the tool
                 build   Build the tool
         """
-        validateschema = Schema({'tool': Use(self.validtool)})
-        self.tool = ""
-        super().__init__(doc, validateschema)
+        self.command = ""
+        super().__init__(doc)
+
+
+class Tool2Arguments(BaseArguments):
+    """
+    Tool2, second level of the commandline hierarchy
+    """
+    def __init__(self):
+        doc = """
+            Tool 2
+            Usage:
+                tools tool2 [options] [--] <command> [<args>...]
+
+            Options:
+                -h --help       Show this screen..
+                -v --verbose    Verbose mode.
+
+            Commands:
+                upload  Upload something
+                delete  Delete something
+        """
+        self.command = ""
+        super().__init__(doc)
 
 
 def main():
@@ -181,6 +162,10 @@ def main():
 
     if args.tool.lower() == "tool1":
         args = Tool1Arguments()
+    elif args.tool.lower() == "tool2":
+        args = Tool2Arguments()
+    else:
+        print("Unknown tool", args.tool)
 
 
 if __name__=="__main__":
