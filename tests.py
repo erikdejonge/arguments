@@ -134,12 +134,13 @@ class ArgumentTest(unittest.TestCase):
         """
         test_context
         """
-        inputval = ['-o', '4', 'contextindicator', 'bb', 'aa']
+        inputval = ['contextindicator','-o', '4',  'bb', 'aa']
         args = Arguments(doc=optionsdoc2, argvalue=inputval)
+
         self.assertIsNotNone(args)
         self.assertEqual(args.option, 4)
         self.assertTrue(args.contextindicator)
-        print(args)
+
 
 
 def main():

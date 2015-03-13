@@ -356,6 +356,19 @@ def not_exists(path):
     return not exists(path)
 
 
+def flattened(mylist, newlist):
+    """
+    @type mylist: list
+    @type newlist: list
+    @return: None
+    """
+    for item in mylist:
+        if isinstance(item, list):
+            flattened(item, newlist)
+        else:
+            newlist.append(item)
+
+
 class Arguments(object):
     """
     Arguments
@@ -376,10 +389,12 @@ class Arguments(object):
         self.m_schema = validateschema
         self.m_reprdict = {}
         self.m_doc = ""
-        newdoc = ""
-        triggerword = "usage"
-        newdoc = remove_extra_indentation(doc, triggerword)
-        self.m_doc = newdoc
+
+        if doc is not None:
+            triggerword = "usage"
+            newdoc = remove_extra_indentation(doc, triggerword)
+            self.m_doc = newdoc
+
         self.m_argv = argvalue
         self.m_persistoption = persistoption
         self.m_alwaysfullhelp = alwaysfullhelp
@@ -433,7 +448,8 @@ class Arguments(object):
             if self.m_doc is None:
                 # noinspection PyUnresolvedReferences
                 import __main__
-                self.m_doc = __main__.__doc__
+                triggerword = "usage"
+                self.m_doc = remove_extra_indentation(__main__.__doc__, triggerword)
 
             if self.m_persistoption is True:
                 optsplit = self.m_doc.split("Options:")
@@ -446,22 +462,37 @@ class Arguments(object):
             try:
                 if self.m_argv is None:
                     self.m_argv = sys.argv[1:]
+
                 sorted_argv = []
                 options_argv = []
                 next_is_option = False
+
                 for argvitem in self.m_argv:
                     if next_is_option is True:
                         options_argv.append(argvitem)
                         next_is_option = False
                     else:
-                        if str(argvitem).startswith("-"):
+                        if str(argvitem).startswith("-") and not str(argvitem).startswith("--"):
                             options_argv.append(argvitem)
                             next_is_option = True
                         else:
                             sorted_argv.append(argvitem)
 
-                arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True, version=self.m_version))
-                #console(arguments, plainprint=True, color="green")
+                flattened_sorted_argv = []
+
+                if len(options_argv) > 0:
+                    if len(sorted_argv) > 0:
+                        sorted_argv.insert(len(sorted_argv) - 1, options_argv)
+                    else:
+                        sorted_argv.insert(0, options_argv)
+
+                flattened(sorted_argv, flattened_sorted_argv)
+
+                # self.m_argv = flattened_sorted_argv
+                arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
+
+                # console(arguments, plainprint=True, color="green")
+
                 if "--help" in [s for s in arguments.values() if isinstance(s, str)] or "-h" in [s for s in arguments.values() if isinstance(s, str)]:
                     print(self.m_doc.strip())
                     exit(1)
@@ -620,7 +651,7 @@ class Arguments(object):
                     else:
                         arguments[k] = int(possnum)
 
-            except ValueError:
+            except ValueError as ex:
                 pass
 
             key = k.replace("pa_", "").replace("op_", "").strip()
@@ -629,8 +660,12 @@ class Arguments(object):
                 if k.startswith("pa_"):
                     posarg[k.replace("pa_", "")] = arguments[k]
 
-                if k.startswith("op_"):
+                elif k.startswith("op_"):
                     opts[k.replace("op_", "")] = arguments[k]
+                else:
+                    posarg[k] = arguments[k]
+            else:
+                console("key not matched", key, color="red")
 
         return opts, posarg
 
