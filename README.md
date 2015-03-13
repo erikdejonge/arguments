@@ -84,7 +84,8 @@ class BaseArguments(arguments.Arguments):
         alwaysfullhelp = False
         validateschema = None
         version = "Argument classbased example 0.1.1"
-        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version)
+        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, \
+                        parse_arguments, persistoption, alwaysfullhelp, version)
 
 
 class MainArguments(BaseArguments):
