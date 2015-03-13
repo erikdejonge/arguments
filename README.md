@@ -176,6 +176,9 @@ if __name__ == "__main__":
     main()
 
 ```
+
+---
+###usage with classes, output examples/classbased.py
 ---
 ```sh
 $ python classbased.py 
