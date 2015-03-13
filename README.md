@@ -195,15 +195,14 @@ Options:
 Commands:
     tool1   Tool1 description here
     tool2   Tool2 ...
-
 ```
 ---
 ```sh
 $ python classbased.py tool1
 Usage:
     classbased.py tool1 [options] [--] <command> [<args>...]
-
-
+```
+```sh
 $ python classbased.py tool1 -h
 Tool 1
 Usage:
@@ -216,7 +215,6 @@ Options:
 Commands:
     run     Run the tool
     build   Build the tool
-
 ```
 ---
 ```yaml
