@@ -177,11 +177,11 @@ def main():
     """
     args = MainArguments()
 
-    print args
+    print(args)
 
-    if args.tool.lower() == "vagrant":
-        args = VagrantArguments()
-        driver_vagrant(args)
+    if args.tool.lower() == "tool1":
+        args = Tool1Arguments()
+
 
 if __name__=="__main__":
     main()
