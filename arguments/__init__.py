@@ -25,15 +25,15 @@ import os
 import sys
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict, get_print_yaml, colorize_for_print
+from consoleprinter import console, handle_ex, consoledict, get_print_yaml, remove_extra_indentation
 
 
 class SchemaError(Exception):
     """Error during Schema validation."""
     def __init__(self, autos, errors):
         """
-        @type autos: str, unicode
-        @type errors: str, unicode
+        @type autos: str
+        @type errors: str
         @return: None
         """
         self.autos = autos if isinstance(autos, list) else [autos]
@@ -48,7 +48,7 @@ class SchemaError(Exception):
 
         def uniq(seq):
             """
-            @type seq: str, unicode
+            @type seq: str
             @return: None
             """
             seen = set()
@@ -71,7 +71,7 @@ class And(object):
     def __init__(self, *args, **kw):
         """
         @type args: tuple
-        @type **kw: str, unicode
+        @type **kw: str
         @return: None
         """
         self._args = args
@@ -88,7 +88,7 @@ class And(object):
 
     def validate(self, data):
         """
-        @type data: str, unicode
+        @type data: str
         @return: None
         """
         for s in [Schema(s, error=self._error) for s in self._args]:
@@ -103,7 +103,7 @@ class Or(And):
     """
     def validate(self, data):
         """
-        @type data: str, unicode
+        @type data: str
         @return: None
         """
         x = SchemaError([], [])
@@ -121,8 +121,8 @@ class Use(object):
     """
     def __init__(self, callable_, error=None):
         """
-        @type callable_: str, unicode
-        @type error: str, unicode, None
+        @type callable_: str
+        @type error: str, None
         @return: None
         """
         assert callable(callable_)
@@ -137,7 +137,7 @@ class Use(object):
 
     def validate(self, data):
         """
-        @type data: str, unicode
+        @type data: str
         @return: None
         """
         try:
@@ -154,7 +154,7 @@ COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
 def priority(s):
     """
-    @type s: str, unicode
+    @type s: str
     @return: None
     """
     if type(s) in (list, tuple, set, frozenset):
@@ -181,8 +181,8 @@ class Schema(object):
     """
     def __init__(self, schema, error=None):
         """
-        @type schema: str, unicode
-        @type error: str, unicode, None
+        @type schema: str
+        @type error: str, None
         @return: None
         """
         self._schema = schema
@@ -196,7 +196,7 @@ class Schema(object):
 
     def add_void_schema_item(self, key):
         """
-        @type key: str, unicode
+        @type key: str
         @return: None
         """
         self._schema[key] = Use(str)
@@ -209,7 +209,7 @@ class Schema(object):
 
     def validate(self, data):
         """
-        @type data: str, unicode
+        @type data: str
         @return: None
         """
         s = self._schema
@@ -350,7 +350,7 @@ class Optional(Schema):
 
 def not_exists(path):
     """
-    @type path: str, unicode
+    @type path: str
     @return: None
     """
     return not exists(path)
@@ -362,12 +362,12 @@ class Arguments(object):
     """
     def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None):
         """
-        @type doc: str, unicode, None
+        @type doc: str, None
         @type validateschema: Schema, None
-        @type yamlfile: str, unicode, None
-        @type yamlstr: str, unicode, None
+        @type yamlfile: str, None
+        @type yamlstr: str, None
         @type parse_arguments: bool
-        @type argvalue: str, unicode, None
+        @type argvalue: str, None
         @return: None
         """
         self.m_once = None
@@ -376,22 +376,10 @@ class Arguments(object):
         self.m_schema = validateschema
         self.m_reprdict = {}
         self.m_doc = ""
-        whitespacecount = 0
-        keeplookingforindention = True
-
-        for line in doc.strip().split("\n"):
-            line = line.rstrip()
-
-            if line.lower().startswith("usage"):
-                keeplookingforindention = False
-
-            if keeplookingforindention is True:
-                if whitespacecount == 0:
-                    whitespacecount = len(line) - len(line.lstrip())
-
-            line = line[whitespacecount:]
-            self.m_doc += line + "\n"
-
+        newdoc = ""
+        triggerword = "usage"
+        newdoc = remove_extra_indentation(doc, triggerword)
+        self.m_doc = newdoc
         self.m_argv = argvalue
         self.m_persistoption = persistoption
         self.m_alwaysfullhelp = alwaysfullhelp
@@ -539,7 +527,7 @@ class Arguments(object):
     @staticmethod
     def not_exists(path):
         """
-        @type path: str, unicode
+        @type path: str
         @return: None
         """
         return not_exists(path)
@@ -629,7 +617,7 @@ class Arguments(object):
 
     def from_yaml_file(self, file_path):
         """
-        @type file_path: str, unicode
+        @type file_path: str
         @return: None
         """
         if exists(file_path):
@@ -639,7 +627,7 @@ class Arguments(object):
 
     def from_yaml(self, yamldata):
         """
-        @type yamldata: str, unicode
+        @type yamldata: str
         @return: None
         """
         self.m_reprdict = yaml.load(yamldata)
