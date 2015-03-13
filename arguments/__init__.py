@@ -357,8 +357,7 @@ def not_exists(path):
 
 class Arguments(object):
     """
-    Argument dict to boject
-    @DynamicAttrs
+    Arguments
     """
     def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False):
         """
@@ -367,11 +366,9 @@ class Arguments(object):
         @type yamlfile: str, unicode, None
         @type yamlstr: str, unicode, None
         @type parse_arguments: bool
-
         @type argvalue: str, unicode, None
         @return: None
         """
-
         self.m_once = None
         self.write = None
         self.load = None
@@ -425,9 +422,7 @@ class Arguments(object):
         if self.load is None:
             if self.m_doc is None:
                 # noinspection PyUnresolvedReferences
-
                 import __main__
-
                 self.m_doc = __main__.__doc__
 
             if self.m_persistoption is True:
@@ -504,7 +499,6 @@ class Arguments(object):
             console("SchemaError", "".join([x for x in e.errors if x]), color="red", plainprint=True)
             print(self.m_doc.strip())
             exit(1)
-
 
         options, positional_arguments = self.sort_arguments(arguments)
         self._set_fields(positional_arguments, options)
