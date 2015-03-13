@@ -374,7 +374,14 @@ class Arguments(object):
         self.load = None
         self.m_schema = validateschema
         self.m_reprdict = {}
-        self.m_doc = doc
+        self.m_doc = ""
+        whitespacecount = 0
+        for line in doc.strip().split("\n"):
+            line = line.rstrip()
+            if whitespacecount == 0:
+                whitespacecount = len(line) - len(line.lstrip())
+            line = line[whitespacecount:]
+            self.m_doc += line + "\n"
         self.m_argv = argvalue
         self.m_persistoption = persistoption
         self.m_alwaysfullhelp = alwaysfullhelp

@@ -117,19 +117,19 @@ class MainArguments(BaseArguments):
 
     def __init__(self):
         doc = """
-Some tools.
-Usage:
-    tools [options] [--] <tool> [<args>...]
+            Some tools.
+            Usage:
+                tools [options] [--] <tool> [<args>...]
 
-Options:
-    -h --help       Show this screen..
-    -v --verbose    Verbose mode.
+            Options:
+                -h --help       Show this screen..
+                -v --verbose    Verbose mode.
 
-Commands:
-    tool1   Bla bla bla
-    tool2   Bla bla bla
-    tool3   Bla bla bla
-"""
+            Commands:
+                tool1   Bla bla bla
+                tool2   Bla bla bla
+                tool3   Bla bla bla
+        """
         validateschema = Schema({'tool': Use(self.validtool)})
         self.tool = ""
         super().__init__(doc, validateschema)
@@ -154,18 +154,18 @@ class Tool1Arguments(BaseArguments):
 
     def __init__(self):
         doc = """
-Tool 1 .
-Usage:
-    tools tool1 [options] [--] <command> [<args>...]
+            Tool 1 .
+            Usage:
+                tools tool1 [options] [--] <command> [<args>...]
 
-Options:
-    -h --help       Show this screen..
-    -v --verbose    Verbose mode.
+            Options:
+                -h --help       Show this screen..
+                -v --verbose    Verbose mode.
 
-Commands:
-    run     Run the tool
-    build   Build the tool
-"""
+            Commands:
+                run     Run the tool
+                build   Build the tool
+        """
         validateschema = Schema({'tool': Use(self.validtool)})
         self.tool = ""
         super().__init__(doc, validateschema)
