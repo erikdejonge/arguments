@@ -377,12 +377,17 @@ class Arguments(object):
         self.m_reprdict = {}
         self.m_doc = ""
         whitespacecount = 0
+        keeplookingforindention = True
 
         for line in doc.strip().split("\n"):
             line = line.rstrip()
 
-            if whitespacecount == 0:
-                whitespacecount = len(line) - len(line.lstrip())
+            if line.lower().startswith("usage"):
+                keeplookingforindention = False
+
+            if keeplookingforindention is True:
+                if whitespacecount == 0:
+                    whitespacecount = len(line) - len(line.lstrip())
 
             line = line[whitespacecount:]
             self.m_doc += line + "\n"
