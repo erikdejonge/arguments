@@ -174,6 +174,65 @@ def main():
         driver_vagrant(args)
 ```
 
+```sh
+
+$ cbx
+Usage:
+    tools [options] [--] <tool> [<args>...]
+
+
+$ cbx -h
+Some tools.
+Usage:
+    tools [options] [--] <tool> [<args>...]
+
+Options:
+    -h --help       Show this screen..
+    -v --verbose    Verbose mode.
+
+Commands:
+    tool1   Bla bla bla
+    tool2   Bla bla bla
+    tool3   Bla bla bla
+
+
+$ cbx tool1
+<__main__.MainArguments object at 0x108da6748>
+options:
+    help: False
+    verbose: False
+positional:
+    args: []
+    tool: tool1
+
+Usage:
+    tools tool1 [options] [--] <command> [<args>...]
+
+
+$ cbx tool1 -h
+Tool 1 .
+Usage:
+    tools tool1 [options] [--] <command> [<args>...]
+
+Options:
+    -h --help       Show this screen..
+    -v --verbose    Verbose mode.
+
+Commands:
+    run   Bla bla bla
+    build   Bla bla bla
+
+
+
+$ cbx tool1 run
+<__main__.MainArguments object at 0x104414748>
+options:
+    help: False
+    verbose: False
+positional:
+    args: ['run']
+    tool: tool1
+```
 
 ##Using schema
 Assume you are using **docopt** with the following usage-pattern:
