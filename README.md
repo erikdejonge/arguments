@@ -60,7 +60,7 @@ positional :
 
 ##usage with classes
 
-A nested docker style commandline program
+A nested docker style commandline program  (python3)
 
 ```python
 
