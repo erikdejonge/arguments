@@ -76,6 +76,104 @@ Options:
 $
 ```
 
+##usage with classes
+
+```python
+
+class BaseArguments(arguments.Arguments):
+    def __init__(self, doc, validateschema):
+        argvalue = None
+        yamlstr = None
+        yamlfile = None
+        parse_arguments = True
+        persistoption = False
+        alwaysfullhelp = False
+        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp)
+
+class MainArguments(BaseArguments):
+    """
+    MainArguments
+    """
+    @staticmethod
+    def validtool(cmd):
+        """
+        @type cmd: str, unicode
+        @return: None
+        """
+        validtools = ["tool1", "tool2", "tool3"]
+
+        if cmd.strip().lower() not in validtools:
+            raise SchemaError("tool", "*" + cmd + "* is not a valid tool")
+
+        return cmd.strip()
+
+    def __init__(self):
+        doc = """
+Some tools.
+Usage:
+    tools [options] [--] <tool> [<args>...]
+
+Options:
+    -h --help       Show this screen..
+    -v --verbose    Verbose mode.
+
+Commands:
+    tool1   Bla bla bla
+    tool2   Bla bla bla
+    tool3   Bla bla bla
+"""
+        validateschema = Schema({'tool': Use(self.validtool)})
+        self.tool = ""
+        super().__init__(doc, validateschema)
+
+
+class MainArguments(BaseArguments):
+    """
+    MainArguments
+    """
+    @staticmethod
+    def validtool(cmd):
+        """
+        @type cmd: str, unicode
+        @return: None
+        """
+        validtools = ["run", "build"]
+
+        if cmd.strip().lower() not in validtools:
+            raise SchemaError("tool", "*" + cmd + "* is not a valid tool")
+
+        return cmd.strip()
+
+    def __init__(self):
+        doc = """
+Tool 1 .
+Usage:
+    tools tool1 [options] [--] <command> [<args>...]
+
+Options:
+    -h --help       Show this screen..
+    -v --verbose    Verbose mode.
+
+Commands:
+    run   Bla bla bla
+    build   Bla bla bla
+"""
+        validateschema = Schema({'command': Use(self.validtool)})
+        self.tool = ""
+        super().__init__(doc, validateschema)
+def main():
+    """
+    main
+    """
+    args = MainArguments()
+
+    print args
+
+    if args.tool.lower() == "vagrant":
+        args = VagrantArguments()
+        driver_vagrant(args)
+```
+
 
 ##Using schema
 Assume you are using **docopt** with the following usage-pattern:
