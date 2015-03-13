@@ -135,7 +135,7 @@ Commands:
         super().__init__(doc, validateschema)
 
 
-class MainArguments(BaseArguments):
+class Tool1Arguments(BaseArguments):
     """
     MainArguments
     """
@@ -166,8 +166,8 @@ Commands:
     run     Run the tool
     build   Build the tool
 """
-        validateschema = Schema({'command': Use(self.validtool)})
-        self.command = ""
+        validateschema = Schema({'tool': Use(self.validtool)})
+        self.tool = ""
         super().__init__(doc, validateschema)
 
 
