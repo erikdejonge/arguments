@@ -83,7 +83,6 @@ class MainArguments(BaseArguments):
                 tool1   Tool1 description here
                 tool2   Tool2 ...
         """
-        self.tool = ""
         super().__init__(doc)
 
 
@@ -102,8 +101,6 @@ class Tool1Arguments(BaseArguments):
                 run     Run the tool
                 build   Build the tool
         """
-        self.command = ""
-
         super().__init__(doc)
 
 
@@ -122,7 +119,6 @@ class Tool2Arguments(BaseArguments):
                 upload  Upload something
                 delete  Delete something
         """
-        self.command = ""
         super().__init__(doc)
 ```
 
