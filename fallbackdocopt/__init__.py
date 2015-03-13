@@ -477,9 +477,9 @@ def formal_usage(printable_usage):
 
 
 def extras(help, version, options, doc):
-    if help and any((o.name in ('-h', '--help')) and o.value for o in options):
-        print(doc.strip("\n"))
-        sys.exit()
+    #if help and any((o.name in ('-h', '--help')) and o.value for o in options):
+    #     print(doc.strip("\n"))
+    #     sys.exit()
     if version and any(o.name == '--version' and o.value for o in options):
         print(version)
         sys.exit()

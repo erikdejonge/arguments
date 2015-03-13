@@ -22,6 +22,7 @@ from builtins import object
 from fallbackdocopt import DocoptExit, docopt
 
 import os
+import sys
 import yaml
 from os.path import exists, expanduser
 from consoleprinter import console, handle_ex, consoledict, get_print_yaml, colorize_for_print
@@ -359,7 +360,7 @@ class Arguments(object):
     """
     Arguments
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None):
         """
         @type doc: str, unicode, None
         @type validateschema: Schema, None
@@ -376,15 +377,20 @@ class Arguments(object):
         self.m_reprdict = {}
         self.m_doc = ""
         whitespacecount = 0
+
         for line in doc.strip().split("\n"):
             line = line.rstrip()
+
             if whitespacecount == 0:
                 whitespacecount = len(line) - len(line.lstrip())
+
             line = line[whitespacecount:]
             self.m_doc += line + "\n"
+
         self.m_argv = argvalue
         self.m_persistoption = persistoption
         self.m_alwaysfullhelp = alwaysfullhelp
+        self.m_version = version
 
         if yamlfile:
             self.from_yaml_file(yamlfile)
@@ -393,15 +399,19 @@ class Arguments(object):
         elif parse_arguments is True:
             parsedok = False
             exdoc = False
+            sysex = False
             try:
                 self.parse_arguments(self.m_schema)
                 parsedok = True
             except DocoptExit:
                 exdoc = True
                 raise
+            except SystemExit:
+                sysex = True
+                raise
 
             finally:
-                if parsedok is False and exdoc is False:
+                if parsedok is False and exdoc is False and sysex is False:
                     print()
 
             if self.write is not None:
@@ -441,13 +451,24 @@ class Arguments(object):
 
             self.m_doc += "\n"
             try:
-                arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True))
+                if self.m_argv is None:
+                    self.m_argv = sys.argv[1:]
+
+                arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True, version=self.m_version))
+
+                if "--help" in [s for s in arguments.values() if isinstance(s, str)] or "-h" in [s for s in arguments.values() if isinstance(s, str)]:
+                    print(self.m_doc.strip())
+                    exit(1)
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     print(self.m_doc.strip())
                     exit(1)
                 else:
-                    raise
+                    if "-h" in self.m_argv or "--help" in self.m_argv:
+                        print(self.m_doc.strip())
+                        exit(1)
+                    else:
+                        raise
 
             k = ""
             try:

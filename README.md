@@ -174,44 +174,35 @@ if __name__=="__main__":
 ```
 
 ```sh
-
-$ python tools.py
+$ python classbased.py 
 Usage:
-    tools [options] [--] <tool> [<args>...]
-
-
-$ python tools.py -h
+    classbased.py [options] [--] <tool> [<args>...]
+```
+```sh
+$ python classbased.py -h
 Some tools.
 Usage:
-    tools [options] [--] <tool> [<args>...]
+    classbased.py [options] [--] <tool> [<args>...]
 
 Options:
     -h --help       Show this screen..
     -v --verbose    Verbose mode.
 
 Commands:
-    tool1   Bla bla bla
-    tool2   Bla bla bla
-    tool3   Bla bla bla
+    tool1   Tool1 description here
+    tool2   Tool2 ...
 
-
-$ python tools.py tool1
-<__main__.MainArguments object at 0x108da6748>
-options:
-    help: False
-    verbose: False
-positional:
-    args: []
-    tool: tool1
-
+```
+```sh
+$ python classbased.py tool1
 Usage:
-    tools tool1 [options] [--] <command> [<args>...]
+    classbased.py tool1 [options] [--] <command> [<args>...]
 
 
-$ python tools.py tool1 -h
-Tool 1 .
+$ python classbased.py tool1 -h
+Tool 1
 Usage:
-    tools tool1 [options] [--] <command> [<args>...]
+    classbased.py tool1 [options] [--] <command> [<args>...]
 
 Options:
     -h --help       Show this screen..
@@ -221,17 +212,19 @@ Commands:
     run     Run the tool
     build   Build the tool
 
-
-
-$ python tools.py tool1 run
-<__main__.MainArguments object at 0x104414748>
+```
+```sh
+$ python classbased.py tool1 run
+<__main__.Tool1Arguments object at 0x10d45cac8>
 options:
     help: False
     verbose: False
 positional:
-    args: ['run']
-    tool: tool1
+    args: []
+    command: run
 ```
+
+
 
 ##Using schema
 Assume you are using **docopt** with the following usage-pattern:
