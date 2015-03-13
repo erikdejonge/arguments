@@ -531,6 +531,7 @@ class Arguments(object):
         @return: None
         """
         return not_exists(path)
+    def snake_case_class_name(self):
 
     def for_print(self):
         """
