@@ -57,6 +57,7 @@ positional :
     posarg2 : pval2
 ```
 
+***
 
 ##usage with classes
 
@@ -175,7 +176,7 @@ if __name__ == "__main__":
     main()
 
 ```
-
+---
 ```sh
 $ python classbased.py 
 Usage:
@@ -196,6 +197,7 @@ Commands:
     tool2   Tool2 ...
 
 ```
+---
 ```sh
 $ python classbased.py tool1
 Usage:
@@ -216,6 +218,7 @@ Commands:
     build   Build the tool
 
 ```
+---
 ```yaml
 $ python classbased.py tool1 run
 <__main__.Tool1Arguments object at 0x10d45cac8>
@@ -227,7 +230,7 @@ positional:
     command: run
 ```
 
-
+***
 
 ##Using schema
 Assume you are using **docopt** with the following usage-pattern:
