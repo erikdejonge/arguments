@@ -25,7 +25,7 @@ import os
 import sys
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict, get_print_yaml, remove_extra_indentation
+from consoleprinter import console, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case
 
 
 class SchemaError(Exception):
@@ -446,9 +446,22 @@ class Arguments(object):
             try:
                 if self.m_argv is None:
                     self.m_argv = sys.argv[1:]
+                sorted_argv = []
+                options_argv = []
+                next_is_option = False
+                for argvitem in self.m_argv:
+                    if next_is_option is True:
+                        options_argv.append(argvitem)
+                        next_is_option = False
+                    else:
+                        if str(argvitem).startswith("-"):
+                            options_argv.append(argvitem)
+                            next_is_option = True
+                        else:
+                            sorted_argv.append(argvitem)
 
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=True, version=self.m_version))
-
+                #console(arguments, plainprint=True, color="green")
                 if "--help" in [s for s in arguments.values() if isinstance(s, str)] or "-h" in [s for s in arguments.values() if isinstance(s, str)]:
                     print(self.m_doc.strip())
                     exit(1)
@@ -531,7 +544,18 @@ class Arguments(object):
         @return: None
         """
         return not_exists(path)
-    def snake_case_class_name(self):
+
+    def snake_case_class_name(self, remove_base_class=True):
+        """
+        @type remove_base_class: bool
+        @return: None
+        """
+        sn = snake_case(self.__class__.__name__)
+
+        if remove_base_class is True:
+            sn = sn.replace("_arguments", "")
+
+        return sn.strip()
 
     def for_print(self):
         """
