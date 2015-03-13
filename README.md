@@ -178,7 +178,8 @@ if __name__ == "__main__":
 ```
 
 ---
-###usage with classes, output examples/classbased.py
+###usage with classes output
+#####(examples/classbased.py)
 ---
 ```sh
 $ python classbased.py 
