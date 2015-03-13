@@ -4,7 +4,7 @@ arguments
 Active8 (04-03-15)
 license: GNU-GPL2
 """
-import sys
+
 import arguments
 
 

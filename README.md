@@ -62,13 +62,9 @@ positional :
 
 A nested docker style commandline program
 
-```python3
-"""
-File tooltest.py
-"""
+```python
 
 import arguments
-from arguments import Schema, Use, SchemaError
 
 
 class BaseArguments(arguments.Arguments):
@@ -76,6 +72,10 @@ class BaseArguments(arguments.Arguments):
     Default initializations for this program (no schema validateion)
     """
     def __init__(self, doc):
+        """
+        @type doc: str, unicode
+        @return: None
+        """
         argvalue = None
         yamlstr = None
         yamlfile = None
@@ -83,7 +83,8 @@ class BaseArguments(arguments.Arguments):
         persistoption = False
         alwaysfullhelp = False
         validateschema = None
-        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp)
+        version = "Argument classbased example 0.1.1"
+        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version)
 
 
 class MainArguments(BaseArguments):
@@ -94,15 +95,15 @@ class MainArguments(BaseArguments):
         doc = """
             Some tools.
             Usage:
-                tools [options] [--] <tool> [<args>...]
+                classbased.py [options] [--] <tool> [<args>...]
 
             Options:
                 -h --help       Show this screen..
                 -v --verbose    Verbose mode.
 
             Commands:
-                tool1   Bla bla bla
-                tool2   Bla bla bla
+                tool1   Tool1 description here
+                tool2   Tool2 ...
         """
         self.tool = ""
         super().__init__(doc)
@@ -116,7 +117,7 @@ class Tool1Arguments(BaseArguments):
         doc = """
             Tool 1
             Usage:
-                tools tool1 [options] [--] <command> [<args>...]
+                classbased.py tool1 [options] [--] <command> [<args>...]
 
             Options:
                 -h --help       Show this screen..
@@ -127,6 +128,7 @@ class Tool1Arguments(BaseArguments):
                 build   Build the tool
         """
         self.command = ""
+
         super().__init__(doc)
 
 
@@ -138,7 +140,7 @@ class Tool2Arguments(BaseArguments):
         doc = """
             Tool 2
             Usage:
-                tools tool2 [options] [--] <command> [<args>...]
+                classbased.py tool2 [options] [--] <command> [<args>...]
 
             Options:
                 -h --help       Show this screen..
@@ -158,8 +160,6 @@ def main():
     """
     args = MainArguments()
 
-    print(args)
-
     if args.tool.lower() == "tool1":
         args = Tool1Arguments()
     elif args.tool.lower() == "tool2":
@@ -167,10 +167,11 @@ def main():
     else:
         print("Unknown tool", args.tool)
 
+    print(args)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
-
 ```
 
 ```sh
