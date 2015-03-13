@@ -78,7 +78,15 @@ $
 
 ##usage with classes
 
+A nested docker style commandline program
+
 ```python
+"""
+File tooltest.py
+"""
+
+import arguments
+from arguments import Schema, Use, SchemaError
 
 class BaseArguments(arguments.Arguments):
     def __init__(self, doc, validateschema):
@@ -155,12 +163,14 @@ Options:
     -v --verbose    Verbose mode.
 
 Commands:
-    run   Bla bla bla
-    build   Bla bla bla
+    run     Run the tool
+    build   Build the tool
 """
         validateschema = Schema({'command': Use(self.validtool)})
-        self.tool = ""
+        self.command = ""
         super().__init__(doc, validateschema)
+
+
 def main():
     """
     main
@@ -172,16 +182,20 @@ def main():
     if args.tool.lower() == "vagrant":
         args = VagrantArguments()
         driver_vagrant(args)
+
+if __name__=="__main__":
+    main()
+
 ```
 
 ```sh
 
-$ cbx
+$ python tools.py
 Usage:
     tools [options] [--] <tool> [<args>...]
 
 
-$ cbx -h
+$ python tools.py -h
 Some tools.
 Usage:
     tools [options] [--] <tool> [<args>...]
@@ -196,7 +210,7 @@ Commands:
     tool3   Bla bla bla
 
 
-$ cbx tool1
+$ python tools.py tool1
 <__main__.MainArguments object at 0x108da6748>
 options:
     help: False
@@ -209,7 +223,7 @@ Usage:
     tools tool1 [options] [--] <command> [<args>...]
 
 
-$ cbx tool1 -h
+$ python tools.py tool1 -h
 Tool 1 .
 Usage:
     tools tool1 [options] [--] <command> [<args>...]
@@ -219,12 +233,12 @@ Options:
     -v --verbose    Verbose mode.
 
 Commands:
-    run   Bla bla bla
-    build   Bla bla bla
+    run     Run the tool
+    build   Build the tool
 
 
 
-$ cbx tool1 run
+$ python tools.py tool1 run
 <__main__.MainArguments object at 0x104414748>
 options:
     help: False
