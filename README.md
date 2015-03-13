@@ -216,7 +216,7 @@ Commands:
     build   Build the tool
 
 ```
-```sh
+```yaml
 $ python classbased.py tool1 run
 <__main__.Tool1Arguments object at 0x10d45cac8>
 options:
