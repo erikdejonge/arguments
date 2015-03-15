@@ -32,8 +32,8 @@ class SchemaError(Exception):
     """Error during Schema validation."""
     def __init__(self, autos, errors):
         """
-        @type autos: str
-        @type errors: str
+        @type autos:  list, tuple, str
+        @type errors: list, str
         @return: None
         """
         self.autos = autos if isinstance(autos, list) else [autos]
@@ -55,7 +55,9 @@ class SchemaError(Exception):
             seen_add = seen.add
             return [x for x in seq if x not in seen and not seen_add(x)]
 
+        # noinspection PyTypeChecker
         a = uniq(i for i in self.autos if i is not None)
+        # noinspection PyTypeChecker
         e = uniq(i for i in self.errors if i is not None)
 
         if e:
@@ -103,7 +105,7 @@ class Or(And):
     """
     def validate(self, data):
         """
-        @type data: str
+        @type data: list, tuple
         @return: None
         """
         x = SchemaError([], [])
@@ -121,7 +123,7 @@ class Use(object):
     """
     def __init__(self, callable_, error=None):
         """
-        @type callable_: str
+        @type callable_:  list, tuple
         @type error: str, None
         @return: None
         """
@@ -154,7 +156,7 @@ COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
 def priority(s):
     """
-    @type s: str
+    @type s: object
     @return: None
     """
     if type(s) in (list, tuple, set, frozenset):
@@ -181,8 +183,8 @@ class Schema(object):
     """
     def __init__(self, schema, error=None):
         """
-        @type schema: str
-        @type error: str, None
+        @type schema:  list, tuple
+        @type error:  list, tuple
         @return: None
         """
         self._schema = schema
@@ -199,17 +201,19 @@ class Schema(object):
         @type key: str
         @return: None
         """
+        # noinspection PyUnresolvedReferences
         self._schema[key] = Use(str)
 
     def get_keys(self):
         """
         get_keys
         """
+        # noinspection PyUnresolvedReferences
         return list(self._schema.keys())
 
     def validate(self, data):
         """
-        @type data: str
+        @type data: dict
         @return: None
         """
         s = self._schema
@@ -293,6 +297,8 @@ class Schema(object):
 
         if flavor == VALIDATOR:
             try:
+
+                # noinspection PyUnresolvedReferences
                 return s.validate(data)
             except SchemaError as x:
                 raise SchemaError([None] + x.autos, [e] + x.errors)
@@ -304,6 +310,8 @@ class Schema(object):
         if flavor == CALLABLE:
             f = s.__name__
             try:
+
+                # noinspection PyCallingNonCallable
                 if s(data):
                     return data
             except SchemaError as x:
@@ -651,7 +659,7 @@ class Arguments(object):
                     else:
                         arguments[k] = int(possnum)
 
-            except ValueError as ex:
+            except ValueError:
                 pass
 
             key = k.replace("pa_", "").replace("op_", "").strip()
@@ -659,7 +667,6 @@ class Arguments(object):
             if len(key) > 0:
                 if k.startswith("pa_"):
                     posarg[k.replace("pa_", "")] = arguments[k]
-
                 elif k.startswith("op_"):
                     opts[k.replace("op_", "")] = arguments[k]
                 else:
@@ -677,9 +684,12 @@ class Arguments(object):
 
     def from_yaml_file(self, file_path):
         """
-        @type file_path: str
+        @type file_path: str, None
         @return: None
         """
+        if file_path is None:
+            raise AssertionError("file_path is None")
+
         if exists(file_path):
             self.from_yaml(open(file_path).read())
         else:
