@@ -434,6 +434,12 @@ class Arguments(object):
                 if parsedok is False and exdoc is False and sysex is False:
                     print()
 
+                if hasattr(self, "help") and getattr(self, "help") is True:
+                    if "args" in self.positional:
+                        if len(self.positional["args"]) == 0:
+                            self.print_commandline_help()
+
+
             if self.write is not None:
                 fp = open(self.write, "w")
                 self.write = ""
@@ -609,9 +615,6 @@ class Arguments(object):
                     if command not in self.m_commandline_help:
                         self.m_commandline_help[command] = str(" ".join(ls[1:])).strip()
 
-        if hasattr(self, "help") and getattr(self, "help") is True:
-            self.print_commandline_help()
-
     def set_command_help(self, command, helptext):
         """
         @type command: str
@@ -632,11 +635,11 @@ class Arguments(object):
             console_warning("No command found in Arguments")
             return False
 
-        cmdpath = "-" + self.get_command_path() + ": " + str(self.command)
-        console(cmdpath, plainprint=True, color="darkcyan")
+        cmdpath = "\033[93m" + self.get_command_path() + ": \033[0m\033[95m" + str(self.command) + "\033[0m"
+        console(cmdpath, plainprint=True)
 
         if self.command in self.m_commandline_help:
-            console(self.m_commandline_help[self.command], plainprint=True, indent="  ")
+            console(self.m_commandline_help[self.command], color="green", plainprint=True, indent="    ")
 
         return True
 
