@@ -143,11 +143,6 @@ class Use(object):
         @return: None
         """
         try:
-            console("Use:validate", data)
-
-            if "dsadsa" in str(data):
-                pass
-
             return self._callable(data)
         except SchemaError as x:
             raise SchemaError([None] + x.autos, [self._error] + x.errors)
@@ -402,7 +397,7 @@ class Arguments(object):
         self.m_schema = validateschema
         self.m_reprdict = {}
         self.m_doc = ""
-        self.add_parent(parent)
+        self.__add_parent(parent)
 
         if doc is not None:
             triggerword = "usage"
@@ -448,13 +443,16 @@ class Arguments(object):
         if yamlfile:
             raise AssertionError("not implemented")
 
-    def add_parent(self, parent):
+    def __add_parent(self, parent):
         """
         @type parent: Arguments
         @return: None
         """
+        if not hasattr(self, "m_parents"):
+            self.m_parents = None
+
         if parent is not None:
-            if not hasattr(self, "m_parents"):
+            if not isinstance(self.m_parents, list):
                 self.m_parents = []
             self.m_parents.append(parent)
 
@@ -585,7 +583,15 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            console("-" + self.snake_case_class_name() + ": ", "".join([x for x in e.errors if x]), color="red", plainprint=True)
+            name = ""
+
+            if self.m_parents is not None:
+                for parent in self.m_parents:
+                    name += parent.snake_case_class_name()
+                    name += " "
+
+            name += self.snake_case_class_name()
+            console("-" + name + ": ", "".join([x for x in e.errors if x]), color="red", plainprint=True)
             print(self.m_doc.strip())
             exit(1)
 
@@ -723,10 +729,11 @@ class BaseArguments(Arguments):
     """
     BaseArguments
     """
-    def __init__(self, doc, validateschema):
+    def __init__(self, doc, validateschema, parent=None):
         """
         @type doc: str, unicode
-        @type validateschema: str, unicode
+        @type validateschema: Schema, None
+        @type parent: Arguments, None
         @return: None
         """
         argvalue = None
@@ -735,11 +742,12 @@ class BaseArguments(Arguments):
         parse_arguments = True
         persistoption = False
         alwaysfullhelp = True
+        version = None
 
         if not hasattr(self, "validcommands"):
             self.validcommands = []
 
-        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp)
+        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)
 
     def validcommand(self, cmd):
         """
@@ -756,6 +764,6 @@ class BaseArguments(Arguments):
 
         if len(self.validcommands) > 0:
             if cmd.lower() not in self.validcommands:
-                raise SchemaError("tool", errors="*" + cmd + "* is not a valid command")
+                raise SchemaError("tool", errors=cmd + ": command not found")
 
         return cmd
