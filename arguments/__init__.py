@@ -799,6 +799,7 @@ class BaseArguments(Arguments):
         @type parent: Arguments, None
         @return: None
         """
+        args = []
         argvalue = None
         yamlstr = None
         yamlfile = None
