@@ -583,15 +583,10 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            name = ""
+            name = self.get_command_path()
 
-            if self.m_parents is not None:
-                for parent in self.m_parents:
-                    name += parent.snake_case_class_name()
-                    name += " "
-
-            name += self.snake_case_class_name()
             console("-" + name + ": ", "".join([x for x in e.errors if x]), color="red", plainprint=True)
+            print()
             print(self.m_doc.strip())
             exit(1)
 
@@ -617,6 +612,20 @@ class Arguments(object):
             sn = sn.replace("_arguments", "")
 
         return sn.strip()
+
+    def get_command_path(self):
+        """
+        get_command_path
+        """
+        name = ""
+
+        if self.m_parents is not None:
+            for parent in self.m_parents:
+                name += parent.snake_case_class_name()
+                name += " "
+
+        name += self.snake_case_class_name()
+        return name
 
     def for_print(self):
         """
