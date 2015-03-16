@@ -399,6 +399,11 @@ class Arguments(object):
         self.m_doc = ""
         self.__add_parent(parent)
 
+        if parent is not None:
+            if hasattr(parent, "help") and parent.help is True:
+                if len(parent.positional["args"]) == 0:
+                    print()
+
         if doc is not None:
             triggerword = "usage"
             newdoc = remove_extra_indentation(doc, triggerword)
@@ -438,7 +443,6 @@ class Arguments(object):
                     if "args" in self.positional:
                         if len(self.positional["args"]) == 0:
                             self.print_commandline_help()
-
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -635,7 +639,7 @@ class Arguments(object):
             console_warning("No command found in Arguments")
             return False
 
-        cmdpath = "\033[93m" + self.get_command_path() + ": \033[0m\033[95m" + str(self.command) + "\033[0m"
+        cmdpath = "\033[95m" + self.get_command_path() + ": \033[0m\033[95m" + str(self.command) + "\033[0m"
         console(cmdpath, plainprint=True)
 
         if self.command in self.m_commandline_help:
