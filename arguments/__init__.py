@@ -25,7 +25,7 @@ import os
 import sys
 import yaml
 from os.path import exists, expanduser
-from consoleprinter import console, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case
+from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case
 
 
 class SchemaError(Exception):
@@ -409,6 +409,9 @@ class Arguments(object):
         self.m_alwaysfullhelp = alwaysfullhelp
         self.m_version = version
 
+        if not hasattr(self, "m_commandline_help"):
+            self.m_commandline_help = {}
+
         if yamlfile:
             self.from_yaml_file(yamlfile)
         elif yamlstr:
@@ -517,15 +520,15 @@ class Arguments(object):
 
                 if "--help" in [s for s in arguments.values() if isinstance(s, str)] or "-h" in [s for s in arguments.values() if isinstance(s, str)]:
                     print(self.m_doc.strip())
-                    exit(1)
+                    exit(0)
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     print(self.m_doc.strip())
-                    exit(1)
+                    exit(0)
                 else:
                     if "-h" in self.m_argv or "--help" in self.m_argv:
                         print(self.m_doc.strip())
-                        exit(1)
+                        exit(0)
                     else:
                         raise
 
@@ -584,7 +587,6 @@ class Arguments(object):
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
             name = self.get_command_path()
-
             console("-" + name + ": ", "".join([x for x in e.errors if x]), color="red", plainprint=True)
             print()
             print(self.m_doc.strip())
@@ -592,6 +594,51 @@ class Arguments(object):
 
         options, positional_arguments = self.sort_arguments(arguments)
         self._set_fields(positional_arguments, options)
+        checking_commands = False
+
+        for line in self.m_doc.split("\n"):
+            if line.strip().lower().startswith("commands:"):
+                checking_commands = True
+
+            if checking_commands is True:
+                ls = [x for x in line.split(" ") if x]
+
+                if len(ls) > 1:
+                    command = ls[0].strip()
+
+                    if command not in self.m_commandline_help:
+                        self.m_commandline_help[command] = str(" ".join(ls[1:])).strip()
+
+        if hasattr(self, "help") and getattr(self, "help") is True:
+            self.print_commandline_help()
+
+    def set_command_help(self, command, helptext):
+        """
+        @type command: str
+        @type helptext: str
+        @return: None
+        """
+        if not hasattr(self, "m_commandline_help"):
+            self.m_commandline_help = {}
+
+        self.m_commandline_help[command] = helptext
+
+    def print_commandline_help(self):
+        """
+        @type commandline: VagrantArguments
+        @return: None
+        """
+        if not hasattr(self, "command"):
+            console_warning("No command found in Arguments")
+            return False
+
+        cmdpath = "-" + self.get_command_path() + ": " + str(self.command)
+        console(cmdpath, plainprint=True, color="darkcyan")
+
+        if self.command in self.m_commandline_help:
+            console(self.m_commandline_help[self.command], plainprint=True, indent="  ")
+
+        return True
 
     @staticmethod
     def not_exists(path):
