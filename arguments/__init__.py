@@ -143,6 +143,11 @@ class Use(object):
         @return: None
         """
         try:
+            console("Use:validate", data)
+
+            if "dsadsa" in str(data):
+                pass
+
             return self._callable(data)
         except SchemaError as x:
             raise SchemaError([None] + x.autos, [self._error] + x.errors)
@@ -381,7 +386,7 @@ class Arguments(object):
     """
     Arguments
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None, parent=None):
         """
         @type doc: str, None
         @type validateschema: Schema, None
@@ -397,6 +402,7 @@ class Arguments(object):
         self.m_schema = validateschema
         self.m_reprdict = {}
         self.m_doc = ""
+        self.add_parent(parent)
 
         if doc is not None:
             triggerword = "usage"
@@ -441,6 +447,16 @@ class Arguments(object):
 
         if yamlfile:
             raise AssertionError("not implemented")
+
+    def add_parent(self, parent):
+        """
+        @type parent: Arguments
+        @return: None
+        """
+        if parent is not None:
+            if not hasattr(self, "m_parents"):
+                self.m_parents = []
+            self.m_parents.append(parent)
 
     def parse_arguments(self, schema=True):
         """
@@ -569,7 +585,7 @@ class Arguments(object):
 
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
-            console("SchemaError", "".join([x for x in e.errors if x]), color="red", plainprint=True)
+            console("-" + self.snake_case_class_name() + ": ", "".join([x for x in e.errors if x]), color="red", plainprint=True)
             print(self.m_doc.strip())
             exit(1)
 
@@ -701,3 +717,45 @@ class Arguments(object):
         @return: None
         """
         self.m_reprdict = yaml.load(yamldata)
+
+
+class BaseArguments(Arguments):
+    """
+    BaseArguments
+    """
+    def __init__(self, doc, validateschema):
+        """
+        @type doc: str, unicode
+        @type validateschema: str, unicode
+        @return: None
+        """
+        argvalue = None
+        yamlstr = None
+        yamlfile = None
+        parse_arguments = True
+        persistoption = False
+        alwaysfullhelp = True
+
+        if not hasattr(self, "validcommands"):
+            self.validcommands = []
+
+        super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp)
+
+    def validcommand(self, cmd):
+        """
+        @type cmd: str, unicode
+        @return: None
+        """
+        cmd = cmd.strip()
+
+        if self.validcommands is None:
+            return cmd
+
+        if cmd.startswith("-"):
+            return cmd
+
+        if len(self.validcommands) > 0:
+            if cmd.lower() not in self.validcommands:
+                raise SchemaError("tool", errors="*" + cmd + "* is not a valid command")
+
+        return cmd
