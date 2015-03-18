@@ -24,8 +24,11 @@ from fallbackdocopt import DocoptExit, docopt
 import os
 import sys
 import yaml
+import shutil
+import requests
+import zipfile
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case
+from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case, bar
 
 
 class SchemaError(Exception):
@@ -377,6 +380,137 @@ def flattened(mylist, newlist):
             newlist.append(item)
 
 
+def abspath(p):
+    """
+    @type p: str
+    @return: None
+    """
+    return os.path.normpath(os.path.join(os.getcwd(), p))
+
+
+def unzip(source_filename, dest_dir):
+    """
+    @type source_filename: str
+    @type dest_dir: str
+    @return: None
+    """
+    zippath = os.path.join(dest_dir, source_filename)
+
+    if not os.path.exists(zippath):
+        console("zipfile doesn't exist", zippath, color="red")
+        raise FileNotFoundError(zippath)
+
+    with zipfile.ZipFile(zippath) as zf:
+        zf.extractall(dest_dir)
+
+    extracted_dir = os.path.join(os.path.join(os.getcwd(), dest_dir), "k8svag-createproject-master")
+
+    if os.path.exists(extracted_dir):
+        for mdir in os.listdir(extracted_dir):
+            shutil.move(os.path.join(extracted_dir, mdir), dest_dir)
+
+        os.rmdir(extracted_dir)
+        os.remove(os.path.join(os.getcwd(), os.path.join(dest_dir, "master.zip")))
+    else:
+        console_warning(extracted_dir + " not created")
+        raise FileExistsError(extracted_dir + " not created")
+
+
+def download(url, mypath):
+    """
+    @type url: str∂
+    @type mypath: str
+    @return: None
+    """
+    r = requests.get(url, stream=True)
+    with open(mypath, 'wb') as f:
+        total_length = r.headers.get('content-length')
+
+        if total_length is not None:
+            total_length = int(total_length)
+
+            for chunk in bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+
+
+def delete_directory(dirpath, excluded_file_names):
+    """
+    @type dirpath: str
+    @type excluded_file_names: list, tuple
+    @return: int
+    """
+    for rootpath, dirs, files in os.walk(dirpath):
+        for f in files:
+            fp = os.path.join(rootpath, f)
+
+            for exname in excluded_file_names:
+                if not fp.endswith(exname):
+                    if os.path.exists(fp):
+                        os.remove(fp)
+
+    dirpaths = []
+
+    for rootpath, dirs, files in os.walk(dirpath):
+        dirpaths.append(rootpath)
+
+    dirpaths.sort(key=lambda x: len(x.split("/")))
+    dirpaths.reverse()
+
+    for rootpath in dirpaths:
+        if dirpath != rootpath:
+            if os.path.exists(rootpath):
+                os.rmdir(rootpath)
+
+    return len(list(os.walk(dirpath)))
+
+
+def abort(command, description):
+    """
+    @type command: str, None
+    @type description: str
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    console("-" + command + ": " + description, color="red", plaintext=True)
+
+
+def warning(command, description):
+    """
+    @type command: str, None
+    @type description: str
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    console("-" + command + ": " + description, color="orange", plaintext=True)
+
+
+def info(command, description):
+    """
+    @type command: str, None
+    @type description: str
+    @return: None
+    """
+    if command is None:
+        command = "?"
+
+    console("-" + command + ": " + description, color="green", plaintext=True)
+
+
+def doinput(description):
+    """
+    @type description: str
+    @return: None
+    """
+    console(description, color="white", plaintext=True, newline=False)
+    return input("$: ").lower()
+
+
 class Arguments(object):
     """
     Arguments
@@ -632,8 +766,7 @@ class Arguments(object):
 
     def print_commandline_help(self):
         """
-        @type commandline: VagrantArguments
-        @return: None
+        @return: bool
         """
         if not hasattr(self, "command"):
             console_warning("No command found in Arguments")
@@ -761,10 +894,19 @@ class Arguments(object):
 
         return opts, posarg
 
+    def set_reprdict_from_attributes(self):
+        reprcopy = self.m_reprdict.copy()
+        for kd, d in reprcopy.items():
+            for k in d.keys():
+                if hasattr(self, k):
+
+                    self.m_reprdict[kd][k] = getattr(self, k)
+
     def as_yaml(self):
         """
         as_yaml
         """
+        self.set_reprdict_from_attributes()
         return "---\n" + yaml.dump(self.m_reprdict, default_flow_style=False)
 
     def from_yaml_file(self, file_path):
@@ -799,7 +941,6 @@ class BaseArguments(Arguments):
         @type parent: Arguments, None
         @return: None
         """
-        args = []
         argvalue = None
         yamlstr = None
         yamlfile = None
@@ -807,6 +948,9 @@ class BaseArguments(Arguments):
         persistoption = False
         alwaysfullhelp = True
         version = None
+
+        # noinspection PyUnusedLocal
+        args = []
 
         if not hasattr(self, "validcommands"):
             self.validcommands = []
