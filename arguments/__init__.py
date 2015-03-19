@@ -30,7 +30,7 @@ import zipfile
 from os.path import exists, expanduser
 from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case, bar
 
-DEBUGMODE = False
+DEBUGMODE = True
 
 
 class SchemaError(Exception):
@@ -455,7 +455,7 @@ def delete_directory(dirpath, excluded_file_names):
             fp = os.path.join(rootpath, f)
 
             for exname in excluded_file_names:
-                if not fp.endswith(exname):
+                if not os.path.basename(fp)==exname:
                     if os.path.exists(fp):
                         os.remove(fp)
 
@@ -467,10 +467,12 @@ def delete_directory(dirpath, excluded_file_names):
     dirpaths.sort(key=lambda x: len(x.split("/")))
     dirpaths.reverse()
 
+
     for rootpath in dirpaths:
         if dirpath != rootpath:
             if os.path.exists(rootpath):
-                os.rmdir(rootpath)
+                os.removedirs(rootpath)
+
 
     return len(list(os.walk(dirpath)))
 
