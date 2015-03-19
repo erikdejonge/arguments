@@ -841,7 +841,7 @@ class Arguments(object):
         """
         s = (str(self.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(self))
         s += "\n"
-        s += consoledict(self.m_reprdict, printval=False)
+        s += get_print_yaml(self.as_yaml())
         return s
 
     def _set_fields(self, positional, options):
