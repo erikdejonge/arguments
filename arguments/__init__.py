@@ -30,6 +30,8 @@ import zipfile
 from os.path import exists, expanduser
 from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case, bar
 
+DEBUGMODE = False
+
 
 class SchemaError(Exception):
     """Error during Schema validation."""
@@ -410,7 +412,8 @@ def unzip(source_filename, dest_dir):
             shutil.move(os.path.join(extracted_dir, mdir), dest_dir)
 
         os.rmdir(extracted_dir)
-        #os.remove(os.path.join(os.getcwd(), os.path.join(dest_dir, "master.zip")))
+
+        # os.remove(os.path.join(os.getcwd(), os.path.join(dest_dir, "master.zip")))
     else:
         console_warning(extracted_dir + " not created")
         raise FileExistsError(extracted_dir + " not created")
@@ -481,7 +484,7 @@ def abort(command, description):
     if command is None:
         command = "?"
 
-    console("-" + command + ": " + description, color="red", plaintext=True)
+    console("-" + command + ": " + description, color="red", plaintext=not DEBUGMODE, line_num_only=4)
 
 
 def warning(command, description):
@@ -493,7 +496,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console("-" + command + ": " + description, color="orange", plaintext=True)
+    console("-" + command + ": " + description, color="orange", plaintext=not DEBUGMODE, line_num_only=4)
 
 
 def info(command, description):
@@ -506,9 +509,9 @@ def info(command, description):
         command = "?"
 
     if description is None:
-        console("-" + command, color="green", plaintext=True)
+        console("-" + command, color="green", plaintext=not DEBUGMODE, line_num_only=4)
     else:
-        console("-" + command + ": " + description, color="green", plaintext=True)
+        console("-" + command + ": " + description, color="green", plaintext=not DEBUGMODE, line_num_only=4)
 
 
 def doinput(description):
@@ -516,7 +519,7 @@ def doinput(description):
     @type description: str
     @return: None
     """
-    console(description, color="white", plaintext=True, newline=False)
+    console(description, color="white", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
     return input("$: ").lower()
 
 
@@ -905,8 +908,8 @@ class Arguments(object):
 
     def set_reprdict_from_attributes(self):
         """
+        set_reprdict_from_attributes
         """
-
         reprcopy = self.m_reprdict.copy()
 
         for kd, d in reprcopy.items():
