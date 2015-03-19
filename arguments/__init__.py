@@ -493,13 +493,15 @@ def warning(command, description):
 def info(command, description):
     """
     @type command: str, None
-    @type description: str
+    @type description: str, None
     @return: None
     """
     if command is None:
         command = "?"
-
-    console("-" + command + ": " + description, color="green", plaintext=True)
+    if description is None:
+        console("-" + command, color="green", plaintext=True)
+    else:
+        console("-" + command + ": " + description, color="green", plaintext=True)
 
 
 def doinput(description):
