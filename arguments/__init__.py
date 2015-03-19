@@ -410,7 +410,7 @@ def unzip(source_filename, dest_dir):
             shutil.move(os.path.join(extracted_dir, mdir), dest_dir)
 
         os.rmdir(extracted_dir)
-        os.remove(os.path.join(os.getcwd(), os.path.join(dest_dir, "master.zip")))
+        #os.remove(os.path.join(os.getcwd(), os.path.join(dest_dir, "master.zip")))
     else:
         console_warning(extracted_dir + " not created")
         raise FileExistsError(extracted_dir + " not created")
@@ -422,17 +422,23 @@ def download(url, mypath):
     @type mypath: str
     @return: None
     """
-    r = requests.get(url, stream=True)
-    with open(mypath, 'wb') as f:
+    cnt = 0
+
+    while cnt < 3:
+        r = requests.get(url, stream=True)
         total_length = r.headers.get('content-length')
 
         if total_length is not None:
-            total_length = int(total_length)
+            break
+        else:
+            cnt += 1
+    with open(mypath, 'wb') as f:
+        total_length = int(total_length)
 
-            for chunk in bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
+        for chunk in bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
+            if chunk:
+                f.write(chunk)
+                f.flush()
 
 
 def delete_directory(dirpath, excluded_file_names):
@@ -498,6 +504,7 @@ def info(command, description):
     """
     if command is None:
         command = "?"
+
     if description is None:
         console("-" + command, color="green", plaintext=True)
     else:
@@ -897,11 +904,14 @@ class Arguments(object):
         return opts, posarg
 
     def set_reprdict_from_attributes(self):
+        """
+        """
+
         reprcopy = self.m_reprdict.copy()
+
         for kd, d in reprcopy.items():
             for k in d.keys():
                 if hasattr(self, k):
-
                     self.m_reprdict[kd][k] = getattr(self, k)
 
     def as_yaml(self):
