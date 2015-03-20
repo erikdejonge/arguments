@@ -28,7 +28,7 @@ import shutil
 import requests
 import zipfile
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case, bar
+from consoleprinter import console, console_warning, handle_ex, get_safe_string, get_print_yaml, remove_extra_indentation, snake_case, bar
 
 DEBUGMODE = False
 
@@ -524,9 +524,10 @@ def get_input_answer(default):
     except KeyboardInterrupt:
         answer = "quit"
 
-    answer = answer.strip()
+    answer = get_safe_string(answer.strip())
 
-    if answer is "":
+
+    if answer is "" and default is not None:
         answer = default
     try:
         answeri = int(answer)
@@ -555,28 +556,40 @@ def doinput(description, default=None, answers=None):
     answer = ""
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
+    if default is not None:
+        description += " (default: " + str(default) + ")"
+
     if answers is not None:
-        panswers = " ["
+        display_answers = ["quit/q"]
+
         for ans in answers:
             ans = str(ans)
+
             if ans is default:
                 ans = ans.upper()
 
-            panswers += ans
-            panswers += ", "
+            display_answers.append(ans)
 
-        panswers += "quit/q"
-        panswers += "]"
+        display_answers.sort(key=lambda x: str(x).lower().strip())
         answers.extend(quitanswers)
-        console(description, panswers, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+        console(description, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+
+        console("options:", indent="  ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+
+        for pa in display_answers:
+            console("-", pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
 
         while True:
             answer = get_input_answer(default)
 
             if answer not in answers:
-                console(answer, color="red", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-                console("not a possible option", color="orange", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-                console("options:", panswers, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+                if answer != "":
+                    console(answer, color="red", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+
+                console("unknown option", color="orange", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+
+                for pa in display_answers:
+                    console("-", pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
             else:
                 break
     else:
