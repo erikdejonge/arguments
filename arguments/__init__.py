@@ -30,7 +30,7 @@ import zipfile
 from os.path import exists, expanduser
 from consoleprinter import console, console_warning, handle_ex, consoledict, get_print_yaml, remove_extra_indentation, snake_case, bar
 
-DEBUGMODE = True
+DEBUGMODE = False
 
 
 class SchemaError(Exception):
@@ -455,7 +455,7 @@ def delete_directory(dirpath, excluded_file_names):
             fp = os.path.join(rootpath, f)
 
             for exname in excluded_file_names:
-                if not os.path.basename(fp)==exname:
+                if not os.path.basename(fp) == exname:
                     if os.path.exists(fp):
                         os.remove(fp)
 
@@ -467,12 +467,10 @@ def delete_directory(dirpath, excluded_file_names):
     dirpaths.sort(key=lambda x: len(x.split("/")))
     dirpaths.reverse()
 
-
     for rootpath in dirpaths:
         if dirpath != rootpath:
             if os.path.exists(rootpath):
                 os.removedirs(rootpath)
-
 
     return len(list(os.walk(dirpath)))
 
@@ -516,13 +514,79 @@ def info(command, description):
         console("-" + command + ": " + description, color="green", plaintext=not DEBUGMODE, line_num_only=4)
 
 
-def doinput(description):
+def get_input_answer(default):
     """
-    @type description: str
+    @type default: str
     @return: None
     """
-    console(description, color="white", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-    return input("$: ").lower()
+    try:
+        answer = input("$: ").lower()
+    except KeyboardInterrupt:
+        answer = "quit"
+
+    answer = answer.strip()
+
+    if answer is "":
+        answer = default
+    try:
+        answeri = int(answer)
+
+        if str(answeri) == answer:
+            answer = answeri
+    except ValueError:
+        pass
+
+    if isinstance(answer, str):
+        try:
+            answer = float(answer)
+        except ValueError:
+            pass
+
+    return answer
+
+
+def doinput(description, default=None, answers=None):
+    """
+    @type description: str
+    @type default: str
+    @type answers: list
+    @return: None
+    """
+    answer = ""
+    quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
+
+    if answers is not None:
+        panswers = " ["
+        for ans in answers:
+            ans = str(ans)
+            if ans is default:
+                ans = ans.upper()
+
+            panswers += ans
+            panswers += ", "
+
+        panswers += "quit/q"
+        panswers += "]"
+        answers.extend(quitanswers)
+        console(description, panswers, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+
+        while True:
+            answer = get_input_answer(default)
+
+            if answer not in answers:
+                console(answer, color="red", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+                console("not a possible option", color="orange", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+                console("options:", panswers, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+            else:
+                break
+    else:
+        console(description, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+        answer = get_input_answer(default)
+
+    if answer in quitanswers:
+        raise SystemExit("doinput quit")
+
+    return answer
 
 
 class Arguments(object):
@@ -551,6 +615,14 @@ class Arguments(object):
             if hasattr(parent, "help") and parent.help is True:
                 if len(parent.positional["args"]) == 0:
                     print()
+
+        if doc is None:
+            # noinspection PyUnresolvedReferences
+            import __main__
+            console("Arguments first param 'doc' is not set using __main__.__doc__ now", plaintext=True, color='orange')
+            triggerword = "usage"
+            console(remove_extra_indentation(__main__.__doc__, triggerword), plaintext=True)
+            self.m_doc = remove_extra_indentation(__main__.__doc__, triggerword)
 
         if doc is not None:
             triggerword = "usage"
@@ -628,12 +700,6 @@ class Arguments(object):
             self.m_schema = schema
 
         if self.load is None:
-            if self.m_doc is None:
-                # noinspection PyUnresolvedReferences
-                import __main__
-                triggerword = "usage"
-                self.m_doc = remove_extra_indentation(__main__.__doc__, triggerword)
-
             if self.m_persistoption is True:
                 optsplit = self.m_doc.split("Options:")
                 optsplit[0] += "Options:\n"

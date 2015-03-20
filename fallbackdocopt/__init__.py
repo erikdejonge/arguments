@@ -465,6 +465,7 @@ def printable_usage(doc):
     # in python < 2.7 you can't pass flags=re.IGNORECASE
     usage_split = re.split(r'([Uu][Ss][Aa][Gg][Ee]:)', doc)
     if len(usage_split) < 3:
+        print(doc)
         raise DocoptLanguageError('"usage:" (case-insensitive) not found.')
     if len(usage_split) > 3:
         raise DocoptLanguageError('More than one "usage:" (case-insensitive).')
