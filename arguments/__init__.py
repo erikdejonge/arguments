@@ -526,7 +526,6 @@ def get_input_answer(default):
 
     answer = get_safe_string(answer.strip())
 
-
     if answer is "" and default is not None:
         answer = default
     try:
@@ -546,13 +545,19 @@ def get_input_answer(default):
     return answer
 
 
-def doinput(description, default=None, answers=None):
+def doinput(description, default=None, answers=None, force=False):
     """
     @type description: str
-    @type default: str
+    @type default: str, int, None
     @type answers: list
     @return: None
     """
+    if force is True:
+        if default is None:
+            raise AssertionError("no default set")
+
+        return default
+
     answer = ""
     quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
 
@@ -573,7 +578,6 @@ def doinput(description, default=None, answers=None):
         display_answers.sort(key=lambda x: str(x).lower().strip())
         answers.extend(quitanswers)
         console(description, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-
         console("options:", indent="  ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
 
         for pa in display_answers:
