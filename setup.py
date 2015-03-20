@@ -15,7 +15,7 @@ setup(name='arguments',
       license='GPL',
       packages=['arguments', 'fallbackdocopt'],
       zip_safe=True,
-      install_requires=['docopt', 'schema', 'consoleprinter'],
+      #install_requires=['docopt', 'schema', 'consoleprinter'],
       classifiers=[
           "Programming Language :: Python",
           "Programming Language :: Python :: 3",
