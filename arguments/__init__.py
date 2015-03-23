@@ -28,7 +28,7 @@ import shutil
 import requests
 import zipfile
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, get_safe_string, get_print_yaml, remove_extra_indentation, snake_case, bar
+from consoleprinter import console, console_warning, handle_ex, get_safe_string, get_print_yaml, remove_extra_indentation, snake_case, bar, stack_trace
 
 DEBUGMODE = False
 
@@ -475,6 +475,24 @@ def delete_directory(dirpath, excluded_file_names):
     return len(list(os.walk(dirpath)))
 
 
+
+def console_cmd_desc(command, description, color):
+    """
+    @type command: str
+    @type description: str
+    @type color: str
+    @return: None
+    """
+    strce = stack_trace(line_num_only=4).strip()
+
+    if "__init__.py" in strce:
+        strce = stack_trace(line_num_only=4, extralevel=True).strip().replace(os.getcwd(), "")
+    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
+
+    console("-"+command + ":", color="blue", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+    console(description, color=color, plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+    console("("+linenr+")", plaintext=True, color="grey")
+
 def abort(command, description):
     """
     @type command: str, None
@@ -498,17 +516,6 @@ def warning(command, description):
         command = "?"
 
     console_cmd_desc(command, description, "orange")
-
-
-def console_cmd_desc(command, description, color):
-    """
-    @type command: str
-    @type description: str
-    @type color: str
-    @return: None
-    """
-    console("-" + command + ": ", color="blue", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-    console(description, color=color, plaintext=not DEBUGMODE, line_num_only=4)
 
 
 def info(command, description):
