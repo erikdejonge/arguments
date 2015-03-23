@@ -390,12 +390,12 @@ def abspath(p):
     return os.path.normpath(os.path.join(os.getcwd(), p))
 
 
-def unzip(source_filename, dest_dir):
+def unzip(source_filename):
     """
     @type source_filename: str
-    @type dest_dir: str
     @return: None
     """
+    dest_dir = os.getcwd()
     zippath = os.path.join(dest_dir, source_filename)
 
     if not os.path.exists(zippath):
@@ -428,14 +428,17 @@ def download(url, mypath):
     cnt = 0
     total_length = 0
     r = requests.get(url, stream=True)
+
     while cnt < 3:
         r = requests.get(url, stream=True)
         total_length = r.headers.get('content-length')
 
         if total_length is not None:
+            total_length = int(total_length)
             break
         else:
             cnt += 1
+
     if total_length > 0:
         with open(mypath, 'wb') as f:
             total_length = int(total_length)
@@ -778,8 +781,6 @@ class Arguments(object):
 
                 # self.m_argv = flattened_sorted_argv
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
-
-                # console(arguments, plainprint=True, color="green")
 
                 if "--help" in [s for s in arguments.values() if isinstance(s, str)] or "-h" in [s for s in arguments.values() if isinstance(s, str)]:
                     print(self.m_doc.strip())
