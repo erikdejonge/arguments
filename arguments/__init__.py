@@ -421,12 +421,13 @@ def unzip(source_filename, dest_dir):
 
 def download(url, mypath):
     """
-    @type url: str∂
+    @type url: str
     @type mypath: str
     @return: None
     """
     cnt = 0
-
+    total_length = 0
+    r = requests.get(url, stream=True)
     while cnt < 3:
         r = requests.get(url, stream=True)
         total_length = r.headers.get('content-length')
@@ -435,13 +436,14 @@ def download(url, mypath):
             break
         else:
             cnt += 1
-    with open(mypath, 'wb') as f:
-        total_length = int(total_length)
+    if total_length > 0:
+        with open(mypath, 'wb') as f:
+            total_length = int(total_length)
 
-        for chunk in bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
-            if chunk:
-                f.write(chunk)
-                f.flush()
+            for chunk in bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
 
 
 def delete_directory(dirpath, excluded_file_names):
@@ -475,7 +477,6 @@ def delete_directory(dirpath, excluded_file_names):
     return len(list(os.walk(dirpath)))
 
 
-
 def console_cmd_desc(command, description, color):
     """
     @type command: str
@@ -487,11 +488,12 @@ def console_cmd_desc(command, description, color):
 
     if "__init__.py" in strce:
         strce = stack_trace(line_num_only=4, extralevel=True).strip().replace(os.getcwd(), "")
-    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
 
-    console("-"+command + ":", color="blue", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
+    console("-" + command + ":", color="blue", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
     console(description, color=color, plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-    console("("+linenr+")", plaintext=True, color="grey")
+    console("(" + linenr + ")", plaintext=True, color="grey")
+
 
 def abort(command, description):
     """
@@ -567,8 +569,9 @@ def get_input_answer(default):
 def doinput(description, default=None, answers=None, force=False):
     """
     @type description: str
-    @type default: str, int, None
-    @type answers: list
+    @type default: str, None
+    @type answers: list, None
+    @type force: bool
     @return: None
     """
     if force is True:
@@ -888,10 +891,13 @@ class Arguments(object):
             console_warning("No command found in Arguments")
             return False
 
+        # noinspection PyUnresolvedReferences
         cmdpath = "\033[95m" + self.get_command_path() + ": \033[0m\033[95m" + str(self.command) + "\033[0m"
         console(cmdpath, plainprint=True)
 
+        # noinspection PyUnresolvedReferences
         if self.command in self.m_commandline_help:
+            # noinspection PyUnresolvedReferences
             console(self.m_commandline_help[self.command], color="green", plainprint=True, indent="    ")
 
         return True
