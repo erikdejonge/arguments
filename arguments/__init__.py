@@ -484,7 +484,8 @@ def abort(command, description):
     if command is None:
         command = "?"
 
-    console("-" + command + ": " + description, color="red", plaintext=not DEBUGMODE, line_num_only=4)
+    console_cmd_desc(command, description, "red")
+    raise SystemExit(1)
 
 
 def warning(command, description):
@@ -496,7 +497,18 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console("-" + command + ": " + description, color="orange", plaintext=not DEBUGMODE, line_num_only=4)
+    console_cmd_desc(command, description, "orange")
+
+
+def console_cmd_desc(command, description, color):
+    """
+    @type command: str
+    @type description: str
+    @type color: str
+    @return: None
+    """
+    console("-" + command + ": ", color="blue", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+    console(description, color=color, plaintext=not DEBUGMODE, line_num_only=4)
 
 
 def info(command, description):
@@ -509,9 +521,9 @@ def info(command, description):
         command = "?"
 
     if description is None:
-        console("-" + command, color="green", plaintext=not DEBUGMODE, line_num_only=4)
+        console("-" + command, color="orange", plaintext=not DEBUGMODE, line_num_only=4)
     else:
-        console("-" + command + ": " + description, color="green", plaintext=not DEBUGMODE, line_num_only=4)
+        console_cmd_desc(command, description, "default")
 
 
 def get_input_answer(default):
