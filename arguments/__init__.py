@@ -480,11 +480,12 @@ def delete_directory(dirpath, excluded_file_names):
     return len(list(os.walk(dirpath)))
 
 
-def console_cmd_desc(command, description, color):
+def console_cmd_desc(command, description, color, enteraftercmd=False):
     """
     @type command: str
     @type description: str
     @type color: str
+    @type enteraftercmd: bool
     @return: None
     """
     strce = stack_trace(line_num_only=4).strip()
@@ -493,8 +494,15 @@ def console_cmd_desc(command, description, color):
         strce = stack_trace(line_num_only=4, extralevel=True).strip().replace(os.getcwd(), "")
 
     linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
-    console("-" + command + ":", color="blue", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-    console(description, color=color, plaintext=not DEBUGMODE, line_num_only=4, newline=False)
+    cmdstr = command + ":"
+    subcolor = "default"
+    if color == "red":
+        color = "red"
+        subcolor = "orange"
+    else:
+        color = "blue"
+    console(cmdstr, color=color, plaintext=not DEBUGMODE, line_num_only=4, newline=enteraftercmd)
+    console(description, color=subcolor, plaintext=not DEBUGMODE, line_num_only=4, newline=False)
     console("(" + linenr + ")", plaintext=True, color="grey")
 
 
@@ -507,7 +515,7 @@ def abort(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description, "red")
+    console_cmd_desc("☄ " + command, description, "red", enteraftercmd=True)
     raise SystemExit(1)
 
 
@@ -520,7 +528,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc(command, description, "orange")
+    console_cmd_desc("✧ " + command, description, "orange")
 
 
 def info(command, description):
@@ -533,7 +541,7 @@ def info(command, description):
         command = "?"
 
     if description is None:
-        console("-" + command, color="orange", plaintext=not DEBUGMODE, line_num_only=4)
+        console(command, color="orange", plaintext=not DEBUGMODE, line_num_only=4)
     else:
         console_cmd_desc(command, description, "default")
 
