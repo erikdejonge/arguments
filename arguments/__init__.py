@@ -931,30 +931,6 @@ class Arguments(object):
         """
         @return: bool
         """
-
-        class MyObject(object):
-            """
-            MyObject
-            """
-            m_float = 8.0
-            m_string = "hello"
-            m_int = 8
-
-            @staticmethod
-            def foo():
-                """
-                foo
-                """
-                pass
-
-            def __str__(self):
-                """
-                __str__
-                """
-                return "My Little Object"
-
-        mo = MyObject()
-        console(mo)
         if not hasattr(self, "command"):
             console_warning("No command found in Arguments")
             return False
