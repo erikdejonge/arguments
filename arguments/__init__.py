@@ -495,15 +495,22 @@ def console_cmd_desc(command, description, color, enteraftercmd=False):
 
     linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
     cmdstr = command + ":"
-    subcolor = "default"
+
     if color == "red":
         color = "red"
         subcolor = "orange"
     else:
+        subcolor = color
         color = "blue"
+
+    # else:
+    #    color = "blue"
+
+    if color == "red":
+        console(linenr, plaintext=True, color="grey", newline=False)
+
     console(cmdstr, color=color, plaintext=not DEBUGMODE, line_num_only=4, newline=enteraftercmd)
-    console(description, color=subcolor, plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-    console("(" + linenr + ")", plaintext=True, color="grey")
+    console(description, color=subcolor, plaintext=not DEBUGMODE, line_num_only=4, newline=True)
 
 
 def abort(command, description):
@@ -515,7 +522,7 @@ def abort(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc("☄ " + command, description, "red", enteraftercmd=True)
+    console_cmd_desc("⚡ " + command.upper(), description, "red", enteraftercmd=False)
     raise SystemExit(1)
 
 
@@ -528,7 +535,7 @@ def warning(command, description):
     if command is None:
         command = "?"
 
-    console_cmd_desc("✧ " + command, description, "orange")
+    console_cmd_desc(command, description, "orange", enteraftercmd=False)
 
 
 def info(command, description):
@@ -614,7 +621,7 @@ def doinput(description, default=None, answers=None, force=False):
         console("options:", indent="  ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
 
         for pa in display_answers:
-            console("-", pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+            console(pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
 
         while True:
             answer = get_input_answer(default)
@@ -626,7 +633,7 @@ def doinput(description, default=None, answers=None, force=False):
                 console("unknown option", color="orange", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
 
                 for pa in display_answers:
-                    console("-", pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
+                    console(pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
             else:
                 break
     else:
@@ -679,7 +686,6 @@ class Arguments(object):
             newdoc = remove_extra_indentation(doc, triggerword)
             self.m_doc = self.reorder_commandlist(newdoc)
 
-
         self.m_argv = argvalue
         self.m_persistoption = persistoption
         self.m_alwaysfullhelp = alwaysfullhelp
@@ -687,6 +693,8 @@ class Arguments(object):
 
         if not hasattr(self, "m_commandline_help"):
             self.m_commandline_help = {}
+
+        self.m_commandline_help_default = {}
 
         if yamlfile:
             self.from_yaml_file(yamlfile)
@@ -698,7 +706,6 @@ class Arguments(object):
             sysex = False
             try:
                 self.parse_arguments(self.m_schema)
-
                 parsedok = True
             except DocoptExit:
                 exdoc = True
@@ -728,7 +735,6 @@ class Arguments(object):
         if yamlfile:
             raise AssertionError("not implemented")
 
-
     def __add_parent(self, parent):
         """
         @type parent: Arguments
@@ -742,7 +748,8 @@ class Arguments(object):
                 self.m_parents = []
             self.m_parents.append(parent)
 
-    def reorder_commandlist(self, doc):
+    @staticmethod
+    def reorder_commandlist(doc):
         """
         @type doc: str
         @return: None
@@ -902,7 +909,7 @@ class Arguments(object):
             arguments = dict((x.replace("<", "pa_").replace(">", "").replace("--", "op_").replace("-", "_"), y) for x, y in arguments.items())
         except SchemaError as e:
             name = self.get_command_path()
-            console("-" + name + ": ", "".join([x for x in e.errors if x]), color="red", plainprint=True)
+            abort(name, "".join([x for x in e.errors if x]))
             print()
             print(self.m_doc.strip())
             exit(1)
@@ -922,7 +929,8 @@ class Arguments(object):
                     command = ls[0].strip()
 
                     if command not in self.m_commandline_help:
-                        self.m_commandline_help[command] = str(" ".join(ls[1:])).strip()
+                        if command not in self.m_commandline_help_default:
+                            self.m_commandline_help_default[command] = str(" ".join(ls[1:])).strip()
 
     def set_command_help(self, command, helptext):
         """
@@ -943,14 +951,37 @@ class Arguments(object):
             console_warning("No command found in Arguments")
             return False
 
-        # noinspection PyUnresolvedReferences
-        cmdpath = "\033[95m" + self.get_command_path() + ": \033[0m\033[95m" + str(self.command) + "\033[0m"
-        console(cmdpath, plainprint=True)
+        for line in self.m_doc.split("\n"):
+            ls = line.split(" ")
 
-        # noinspection PyUnresolvedReferences
-        if self.command in self.m_commandline_help:
             # noinspection PyUnresolvedReferences
-            console(self.m_commandline_help[self.command], color="green", plainprint=True, indent="    ")
+            if self.command in self.m_commandline_help and line.strip().startswith(self.command):
+                print("\033[92m" + line + "\033[0m")
+
+                if len(ls) > 0:
+                    ls = [x for x in ls if x]
+
+                    if ls:
+                        # noinspection PyUnresolvedReferences
+                        if ls[0] == self.command:
+                            js = "".join(line.split(ls[0]))
+                            lenjs = len(ls[0].strip())
+                            if lenjs < 3:
+                                lenjs = 1
+                            spaces = (len(js) - len(js.strip())) + lenjs
+
+
+                            # noinspection PyUnresolvedReferences
+                            lineorg = line
+                            line = "️\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
+                            line = line.replace(ls[0], "", 1).strip()
+
+                            if line not in lineorg:
+                                print((spaces * " ") + line)
+            elif line.strip().startswith(self.command):
+                print("\033[92m" + line + "\033[0m")
+            else:
+                print(line)
 
         return True
 
