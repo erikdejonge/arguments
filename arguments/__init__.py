@@ -669,7 +669,8 @@ class Arguments(object):
         if doc is not None:
             triggerword = "usage"
             newdoc = remove_extra_indentation(doc, triggerword)
-            self.m_doc = newdoc
+            self.m_doc = self.reorder_commandlist(newdoc)
+
 
         self.m_argv = argvalue
         self.m_persistoption = persistoption
@@ -689,6 +690,7 @@ class Arguments(object):
             sysex = False
             try:
                 self.parse_arguments(self.m_schema)
+
                 parsedok = True
             except DocoptExit:
                 exdoc = True
@@ -718,6 +720,7 @@ class Arguments(object):
         if yamlfile:
             raise AssertionError("not implemented")
 
+
     def __add_parent(self, parent):
         """
         @type parent: Arguments
@@ -730,6 +733,46 @@ class Arguments(object):
             if not isinstance(self.m_parents, list):
                 self.m_parents = []
             self.m_parents.append(parent)
+
+    def reorder_commandlist(self, doc):
+        """
+        @type doc: str
+        @return: None
+        """
+        cmdbuffering = False
+        commands = {}
+        newdoc = ""
+
+        for line in doc.split("\n"):
+            if cmdbuffering is True:
+                ls = line.strip().split(" ")
+
+                if len(ls) > 0 and len(ls[0].strip()) > 0:
+                    commands[ls[0]] = " ".join(ls[1:])
+            else:
+                newdoc += line
+                newdoc += "\n"
+
+            if "commands:" in line.lower():
+                cmdbuffering = True
+
+        commandkeys = sorted(commands.keys())
+        longest = 0
+
+        for cmd in commandkeys:
+            if len(cmd) > longest:
+                longest = len(cmd)
+
+        for cmd in commandkeys:
+            if len(commands[cmd].strip()) > 0:
+                newdoc += " " * 4
+                newdoc += cmd
+                newdoc += " " * 2
+                newdoc += " " * (longest - len(cmd))
+                newdoc += commands[cmd].strip()
+                newdoc += "\n"
+
+        return newdoc.strip()
 
     def parse_arguments(self, schema=True):
         """
@@ -748,8 +791,6 @@ class Arguments(object):
                 optsplit[0] += """    -w --write=<writeymlpath>\tWrite arguments yaml file.\n    -l --load=<loadymlpath>\tLoad arguments yaml file."""
                 self.m_doc = "".join(optsplit)
                 console(optsplit)
-
-            self.m_doc += "\n"
             try:
                 if self.m_argv is None:
                     self.m_argv = sys.argv[1:]
@@ -788,10 +829,12 @@ class Arguments(object):
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     print(self.m_doc.strip())
+                    print()
                     exit(0)
                 else:
                     if "-h" in self.m_argv or "--help" in self.m_argv:
                         print(self.m_doc.strip())
+                        print()
                         exit(0)
                     else:
                         raise
@@ -888,6 +931,7 @@ class Arguments(object):
         """
         @return: bool
         """
+        console(os, print_stack=True, color="red")
         if not hasattr(self, "command"):
             console_warning("No command found in Arguments")
             return False
@@ -1080,7 +1124,7 @@ class BaseArguments(Arguments):
 
         if not hasattr(self, "validcommands"):
             self.validcommands = []
-
+        self.reorder_commandlist(doc)
         super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)
 
     def validcommand(self, cmd):
