@@ -28,9 +28,7 @@ import shutil
 import requests
 import zipfile
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, get_safe_string, get_print_yaml, remove_extra_indentation, snake_case, bar, stack_trace
-
-DEBUGMODE = False
+from consoleprinter import console, console_warning, handle_ex, abort, get_print_yaml, remove_extra_indentation, snake_case, bar
 
 
 class SchemaError(Exception):
@@ -480,172 +478,6 @@ def delete_directory(dirpath, excluded_file_names):
     return len(list(os.walk(dirpath)))
 
 
-def console_cmd_desc(command, description, color, enteraftercmd=False):
-    """
-    @type command: str
-    @type description: str
-    @type color: str
-    @type enteraftercmd: bool
-    @return: None
-    """
-    strce = stack_trace(line_num_only=4).strip()
-
-    if "__init__.py" in strce:
-        strce = stack_trace(line_num_only=4, extralevel=True).strip().replace(os.getcwd(), "")
-
-    linenr = ":".join([x.split("(")[0].strip().strip(",").strip('"') for x in strce.split("line")]).replace("__init__.py", "init")
-    cmdstr = command + ":"
-
-    if color == "red":
-        color = "red"
-        subcolor = "orange"
-    else:
-        subcolor = color
-        color = "blue"
-
-    # else:
-    #    color = "blue"
-
-    if color == "red":
-        console(linenr, plaintext=True, color="grey", newline=False)
-
-    console(cmdstr, color=color, plaintext=not DEBUGMODE, line_num_only=4, newline=enteraftercmd)
-    console(description, color=subcolor, plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-
-
-def abort(command, description):
-    """
-    @type command: str, None
-    @type description: str
-    @return: None
-    """
-    if command is None:
-        command = "?"
-
-    console_cmd_desc("⚡ " + command.upper(), description, "red", enteraftercmd=False)
-    raise SystemExit(1)
-
-
-def warning(command, description):
-    """
-    @type command: str, None
-    @type description: str
-    @return: None
-    """
-    if command is None:
-        command = "?"
-
-    console_cmd_desc(command, description, "orange", enteraftercmd=False)
-
-
-def info(command, description):
-    """
-    @type command: str, None
-    @type description: str, None
-    @return: None
-    """
-    if command is None:
-        command = "?"
-
-    if description is None:
-        console(command, color="orange", plaintext=not DEBUGMODE, line_num_only=4)
-    else:
-        console_cmd_desc(command, description, "default")
-
-
-def get_input_answer(default):
-    """
-    @type default: str
-    @return: None
-    """
-    try:
-        answer = input("$: ").lower()
-    except KeyboardInterrupt:
-        answer = "quit"
-
-    answer = get_safe_string(answer.strip())
-
-    if answer is "" and default is not None:
-        answer = default
-    try:
-        answeri = int(answer)
-
-        if str(answeri) == answer:
-            answer = answeri
-    except ValueError:
-        pass
-
-    if isinstance(answer, str):
-        try:
-            answer = float(answer)
-        except ValueError:
-            pass
-
-    return answer
-
-
-def doinput(description, default=None, answers=None, force=False):
-    """
-    @type description: str
-    @type default: str, None
-    @type answers: list, None
-    @type force: bool
-    @return: None
-    """
-    if force is True:
-        if default is None:
-            raise AssertionError("no default set")
-
-        return default
-
-    answer = ""
-    quitanswers = ["quit", "q", "Quit", "Q", "QUIT"]
-
-    if default is not None:
-        description += " (default: " + str(default) + ")"
-
-    if answers is not None:
-        display_answers = ["quit/q"]
-
-        for ans in answers:
-            ans = str(ans)
-
-            if ans is default:
-                ans = ans.upper()
-
-            display_answers.append(ans)
-
-        display_answers.sort(key=lambda x: str(x).lower().strip())
-        answers.extend(quitanswers)
-        console(description, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-        console("options:", indent="  ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-
-        for pa in display_answers:
-            console(pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-
-        while True:
-            answer = get_input_answer(default)
-
-            if answer not in answers:
-                if answer != "":
-                    console(answer, color="red", plaintext=not DEBUGMODE, line_num_only=4, newline=False)
-
-                console("unknown option", color="orange", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-
-                for pa in display_answers:
-                    console(pa, indent="    ", color="grey", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-            else:
-                break
-    else:
-        console(description, color="darkyellow", plaintext=not DEBUGMODE, line_num_only=4, newline=True)
-        answer = get_input_answer(default)
-
-    if answer in quitanswers:
-        raise SystemExit("doinput quit")
-
-    return answer
-
-
 class Arguments(object):
     """
     Arguments
@@ -667,6 +499,7 @@ class Arguments(object):
         self.m_reprdict = {}
         self.m_doc = ""
         self.__add_parent(parent)
+        self.parsedarguments = {}
 
         if parent is not None:
             if hasattr(parent, "help") and parent.help is True:
@@ -719,9 +552,19 @@ class Arguments(object):
                     print()
 
                 if hasattr(self, "help") and getattr(self, "help") is True:
-                    if "args" in self.positional:
-                        if len(self.positional["args"]) == 0:
-                            self.print_commandline_help()
+                    # noinspection PyUnresolvedReferences
+                    if self.command and len(self.m_argv) > 1:
+                        # noinspection PyUnresolvedReferences
+                        if self.m_argv[-2] is self.command and self.command in self.validcommands:
+                            self.print_commandline_help(usageonly=False)
+                        else:
+                            argvreverse = self.m_argv
+                            argvreverse.reverse()
+
+                            for argv in argvreverse:
+                                # noinspection PyUnresolvedReferences
+                                if argv in self.validcommands and self.m_parents and len(self.m_parents) > 0:
+                                    self.print_commandline_help(usageonly=False)
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -789,6 +632,17 @@ class Arguments(object):
 
         return newdoc.strip()
 
+    def get_usage_from_mdoc(self):
+        """
+        get_usage_from_mdoc
+        """
+        usage = self.m_doc.strip().split("Usage:")
+
+        if len(usage) > 1:
+            usage = "Usage:" + usage[1]
+
+        return usage.strip()
+
     def parse_arguments(self, schema=True):
         """
         @type schema: Schema
@@ -837,20 +691,23 @@ class Arguments(object):
 
                 # self.m_argv = flattened_sorted_argv
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
+                self.parsedarguments = arguments.copy()
 
-                if "--help" in [s for s in arguments.values() if isinstance(s, str)] or "-h" in [s for s in arguments.values() if isinstance(s, str)]:
-                    print(self.m_doc.strip())
-                    exit(0)
+                if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
+                    pass
+
+                #     print(self.m_doc.strip())
+                #     exit(0)
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
-                    print(self.m_doc.strip())
-                    print()
-                    exit(0)
+                    usage = self.get_usage_from_mdoc()
+                    print(usage)
+                    raise SystemExit(0)
                 else:
                     if "-h" in self.m_argv or "--help" in self.m_argv:
                         print(self.m_doc.strip())
                         print()
-                        exit(0)
+                        raise SystemExit(0)
                     else:
                         raise
 
@@ -943,15 +800,21 @@ class Arguments(object):
 
         self.m_commandline_help[command] = helptext
 
-    def print_commandline_help(self):
+    def print_commandline_help(self, usageonly=False):
         """
-        @return: bool
+        @type usageonly: bool
+        @return: None
         """
         if not hasattr(self, "command"):
             console_warning("No command found in Arguments")
             return False
 
-        for line in self.m_doc.split("\n"):
+        if usageonly is True:
+            usage = self.get_usage_from_mdoc()
+        else:
+            usage = self.m_doc
+
+        for line in usage.split("\n"):
             ls = line.split(" ")
 
             # noinspection PyUnresolvedReferences
@@ -966,18 +829,20 @@ class Arguments(object):
                         if ls[0] == self.command:
                             js = "".join(line.split(ls[0]))
                             lenjs = len(ls[0].strip())
+
                             if lenjs < 3:
                                 lenjs = 1
-                            spaces = (len(js) - len(js.strip())) + lenjs
 
+                            spaces = (len(js) - len(js.strip())) + lenjs
+                            lineorg = line
 
                             # noinspection PyUnresolvedReferences
-                            lineorg = line
                             line = "️\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
                             line = line.replace(ls[0], "", 1).strip()
 
                             if line not in lineorg:
                                 print((spaces * " ") + line)
+
             elif line.strip().startswith(self.command):
                 print("\033[92m" + line + "\033[0m")
             else:
