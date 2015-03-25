@@ -690,6 +690,10 @@ class Arguments(object):
                 flattened(sorted_argv, flattened_sorted_argv)
 
                 # self.m_argv = flattened_sorted_argv
+                if self.m_parents:
+                    for parent in self.m_parents:
+                        if parent.command:
+                            self.m_argv.remove(parent.command)
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
                 self.parsedarguments = arguments.copy()
 
@@ -769,7 +773,7 @@ class Arguments(object):
             abort(name, "".join([x for x in e.errors if x]))
             print()
             print(self.m_doc.strip())
-            exit(1)
+            raise
 
         options, positional_arguments = self.sort_arguments(arguments)
         self._set_fields(positional_arguments, options)
