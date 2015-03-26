@@ -28,7 +28,7 @@ import shutil
 import requests
 import zipfile
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, abort, get_print_yaml, remove_extra_indentation, snake_case, bar
+from consoleprinter import console, console_warning, handle_ex, abort, get_print_yaml, remove_extra_indentation, snake_case, bar, SystemGlobals
 
 
 class SchemaError(Exception):
@@ -500,6 +500,7 @@ class Arguments(object):
         self.m_doc = ""
         self.__add_parent(parent)
         self.parsedarguments = {}
+        self.command = ""
 
         if parent is not None:
             if hasattr(parent, "help") and parent.help is True:
@@ -560,11 +561,21 @@ class Arguments(object):
                         else:
                             argvreverse = self.m_argv
                             argvreverse.reverse()
+                            exit = True
 
                             for argv in argvreverse:
                                 # noinspection PyUnresolvedReferences
                                 if argv in self.validcommands and self.m_parents and len(self.m_parents) > 0:
                                     self.print_commandline_help(usageonly=False)
+
+                                if argv in self.validcommands:
+                                    if self.m_parents is None:
+                                        exit = False
+                                    elif self.m_parents is not None and len(self.m_parents) == 0:
+                                        exit = False
+
+                            if exit is True:
+                                raise SystemExit(0)
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -649,6 +660,7 @@ class Arguments(object):
         @return: None
         """
         arguments = None
+        self.doprinthelp = False
 
         if schema is not None:
             self.m_schema = schema
@@ -690,18 +702,19 @@ class Arguments(object):
                 flattened(sorted_argv, flattened_sorted_argv)
 
                 # self.m_argv = flattened_sorted_argv
+
                 if self.m_parents:
                     for parent in self.m_parents:
                         if parent.command:
+                            # pass
+                            # console_warning("removed parent")
                             self.m_argv.remove(parent.command)
+
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
                 self.parsedarguments = arguments.copy()
 
                 if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
-                    pass
-
-                #     print(self.m_doc.strip())
-                #     exit(0)
+                    doprinthelp = True
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     usage = self.get_usage_from_mdoc()
@@ -793,6 +806,11 @@ class Arguments(object):
                         if command not in self.m_commandline_help_default:
                             self.m_commandline_help_default[command] = str(" ".join(ls[1:])).strip()
 
+        if self.doprinthelp is True:
+
+            self.print_commandline_help()
+
+
     def set_command_help(self, command, helptext):
         """
         @type command: str
@@ -809,6 +827,7 @@ class Arguments(object):
         @type usageonly: bool
         @return: None
         """
+
         if not hasattr(self, "command"):
             console_warning("No command found in Arguments")
             return False
