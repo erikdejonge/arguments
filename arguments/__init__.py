@@ -387,36 +387,6 @@ def abspath(p):
     """
     return os.path.normpath(os.path.join(os.getcwd(), p))
 
-
-def unzip(source_filename):
-    """
-    @type source_filename: str
-    @return: None
-    """
-    dest_dir = os.getcwd()
-    zippath = os.path.join(dest_dir, source_filename)
-
-    if not os.path.exists(zippath):
-        console("zipfile doesn't exist", zippath, color="red")
-        raise FileNotFoundError(zippath)
-
-    with zipfile.ZipFile(zippath) as zf:
-        zf.extractall(dest_dir)
-
-    extracted_dir = os.path.join(os.path.join(os.getcwd(), dest_dir), "k8svag-createproject-master")
-
-    if os.path.exists(extracted_dir):
-        for mdir in os.listdir(extracted_dir):
-            shutil.move(os.path.join(extracted_dir, mdir), dest_dir)
-
-        os.rmdir(extracted_dir)
-
-        # os.remove(os.path.join(os.getcwd(), os.path.join(dest_dir, "master.zip")))
-    else:
-        console_warning(extracted_dir + " not created")
-        raise FileExistsError(extracted_dir + " not created")
-
-
 def download(url, mypath):
     """
     @type url: str
