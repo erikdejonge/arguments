@@ -24,11 +24,8 @@ from fallbackdocopt import DocoptExit, docopt
 import os
 import sys
 import yaml
-import shutil
-import requests
-import zipfile
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, abort, get_print_yaml, remove_extra_indentation, snake_case, bar, SystemGlobals
+from consoleprinter import console, console_warning, handle_ex, abort, get_print_yaml, remove_extra_indentation, snake_case
 
 
 class SchemaError(Exception):
@@ -88,7 +85,6 @@ class And(object):
         __repr__
         """
         return '%s(%s)' % (self.__class__.__name__,
-
                            ', '.join(repr(a) for a in self._args))
 
     def validate(self, data):
@@ -387,35 +383,6 @@ def abspath(p):
     """
     return os.path.normpath(os.path.join(os.getcwd(), p))
 
-def download(url, mypath):
-    """
-    @type url: str
-    @type mypath: str
-    @return: None
-    """
-    cnt = 0
-    total_length = 0
-    r = requests.get(url, stream=True)
-
-    while cnt < 3:
-        r = requests.get(url, stream=True)
-        total_length = r.headers.get('content-length')
-
-        if total_length is not None:
-            total_length = int(total_length)
-            break
-        else:
-            cnt += 1
-
-    if total_length > 0:
-        with open(mypath, 'wb') as f:
-            total_length = int(total_length)
-
-            for chunk in bar(r.iter_content(chunk_size=1024), expected_size=(total_length / 1024) + 1):
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
-
 
 def delete_directory(dirpath, excluded_file_names):
     """
@@ -462,6 +429,7 @@ class Arguments(object):
         @type argvalue: str, None
         @return: None
         """
+        self.doprinthelp = False
         self.m_once = None
         self.write = None
         self.load = None
@@ -471,6 +439,7 @@ class Arguments(object):
         self.__add_parent(parent)
         self.parsedarguments = {}
         self.command = ""
+        self.validcommands = []
 
         if parent is not None:
             if hasattr(parent, "help") and parent.help is True:
@@ -531,7 +500,7 @@ class Arguments(object):
                         else:
                             argvreverse = self.m_argv
                             argvreverse.reverse()
-                            exit = True
+                            doexit = True
 
                             for argv in argvreverse:
                                 # noinspection PyUnresolvedReferences
@@ -540,11 +509,11 @@ class Arguments(object):
 
                                 if argv in self.validcommands:
                                     if self.m_parents is None:
-                                        exit = False
+                                        doexit = False
                                     elif self.m_parents is not None and len(self.m_parents) == 0:
-                                        exit = False
+                                        doexit = False
 
-                            if exit is True:
+                            if doexit is True:
                                 raise SystemExit(0)
 
             if self.write is not None:
@@ -630,7 +599,6 @@ class Arguments(object):
         @return: None
         """
         arguments = None
-        self.doprinthelp = False
 
         if schema is not None:
             self.m_schema = schema
@@ -668,7 +636,6 @@ class Arguments(object):
                         sorted_argv.insert(len(sorted_argv) - 1, options_argv)
                     else:
                         sorted_argv.insert(0, options_argv)
-
                 flattened(sorted_argv, flattened_sorted_argv)
 
                 # self.m_argv = flattened_sorted_argv
@@ -684,7 +651,7 @@ class Arguments(object):
                 self.parsedarguments = arguments.copy()
 
                 if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
-                    doprinthelp = True
+                    self.doprinthelp = True
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     usage = self.get_usage_from_mdoc()
@@ -720,12 +687,10 @@ class Arguments(object):
                 if isinstance(arguments, dict):
                     for k in arguments:
                         console(k.strip(), color="red")
-
                 handle_ex(e)
         else:
-            if isinstance(self.load, str):
-                # noinspection PyTypeChecker
-                loaded_arguments = yaml.load(open(self.load))
+            if isinstance(self.load, str) and self.load is not None:
+                loaded_arguments = yaml.load(open(str(self.load)))
                 arguments = {}
                 for k in loaded_arguments["options"]:
                     arguments["op_" + k] = loaded_arguments["options"][k]
@@ -777,9 +742,7 @@ class Arguments(object):
                             self.m_commandline_help_default[command] = str(" ".join(ls[1:])).strip()
 
         if self.doprinthelp is True:
-
             self.print_commandline_help()
-
 
     def set_command_help(self, command, helptext):
         """
@@ -797,7 +760,6 @@ class Arguments(object):
         @type usageonly: bool
         @return: None
         """
-
         if not hasattr(self, "command"):
             console_warning("No command found in Arguments")
             return False
@@ -916,7 +878,6 @@ class Arguments(object):
             if hasattr(v, "strip"):
                 v = v.strip("'")
                 v = v.strip('"')
-
             setattr(self, str(k), v)
 
     @staticmethod
@@ -1017,9 +978,6 @@ class BaseArguments(Arguments):
 
         # noinspection PyUnusedLocal
         args = []
-
-        if not hasattr(self, "validcommands"):
-            self.validcommands = []
         self.reorder_commandlist(doc)
         super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)
 
