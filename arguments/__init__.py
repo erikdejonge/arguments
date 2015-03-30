@@ -650,8 +650,8 @@ class Arguments(object):
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
                 self.parsedarguments = arguments.copy()
 
-                if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
-                    self.doprinthelp = True
+                #if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
+                #    self.doprinthelp = True
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     usage = self.get_usage_from_mdoc()
