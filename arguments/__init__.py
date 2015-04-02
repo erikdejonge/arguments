@@ -585,7 +585,7 @@ class Arguments(object):
 
                             # noinspection PyUnresolvedReferences
                             line = "️\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
-                            line = line.replace(ls[0], "", 1).strip()
+                            #line = line.replace(ls[0], "", 1).strip()
 
                             if line not in lineorg:
                                 print((spaces * " ") + line)

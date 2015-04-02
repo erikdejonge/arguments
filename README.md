@@ -7,6 +7,16 @@ Argument parser based on docopt
 pip install arguments
 ```
 
+##help highlighted
+Setting custom help is easy, override from the BaseArgument class and call set_command_help
+
+```python
+self.set_command_help("status", "ssh-config data combined with other data")
+```
+
+##screenshot
+![cmdhelp](res/help_high.png "Command help")
+
 ##usage
 Docopt is used for parsing the docstring (__doc__), arguments bundles the schema parser and returns a OptionParser like object with normalized attributes
 
