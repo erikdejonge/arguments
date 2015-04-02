@@ -14,6 +14,12 @@ Setting custom help is easy, override from the BaseArgument class and call set_c
 self.set_command_help("status", "ssh-config data combined with other data")
 ```
 
+##example
+Please look at the class VagrantArguments in the file below for an extensive example.
+
+https://github.com/erikdejonge/k8svag/blob/master/k8svag/__init__.py
+
+
 ##screenshot
 ![cmdhelp](res/help_high.png "Command help")
 
