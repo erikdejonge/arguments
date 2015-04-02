@@ -15,7 +15,7 @@ self.set_command_help("status", "ssh-config data combined with other data")
 ```
 
 ##example
-Please look at the class VagrantArguments in the file below for an extensive example.
+Please look at the class VagrantArguments in the file below for an example.
 
 https://github.com/erikdejonge/k8svag/blob/master/k8svag/__init__.py
 
