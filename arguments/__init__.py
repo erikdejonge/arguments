@@ -1,179 +1,24 @@
+#!/usr/bin/env python3
 # coding=utf-8
 """
 arguments
+
 Active8 (04-03-15)
 license: GNU-GPL2
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import division
-from __future__ import absolute_import
-from builtins import super
-from builtins import dict
-from builtins import open
-from builtins import int
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
-
-# noinspection PyUnresolvedReferences
-from fallbackdocopt import DocoptExit, docopt
 
 import os
 import sys
 import yaml
+from consoleprinter import abort, console, console_warning, get_print_yaml, handle_ex, remove_extra_indentation, snake_case
+from fallbackdocopt import DocoptExit, docopt
 from os.path import exists, expanduser
-from consoleprinter import console, console_warning, handle_ex, abort, get_print_yaml, remove_extra_indentation, snake_case
-
-
-class SchemaError(Exception):
-    """Error during Schema validation."""
-    def __init__(self, autos, errors):
-        """
-        @type autos:  list, tuple, str
-        @type errors: list, str
-        @return: None
-        """
-        self.autos = autos if isinstance(autos, list) else [autos]
-        self.errors = errors if isinstance(errors, list) else [errors]
-        Exception.__init__(self, self.code)
-
-    @property
-    def code(self):
-        """
-        code
-        """
-
-        def uniq(seq):
-            """
-            @type seq: str
-            @return: None
-            """
-            seen = set()
-            seen_add = seen.add
-            return [x for x in seq if x not in seen and not seen_add(x)]
-
-        # noinspection PyTypeChecker
-        a = uniq(i for i in self.autos if i is not None)
-        # noinspection PyTypeChecker
-        e = uniq(i for i in self.errors if i is not None)
-
-        if e:
-            return '\n'.join(e)
-
-        return '\n'.join(a)
-
-
-class And(object):
-    """
-    And
-    """
-    def __init__(self, *args, **kw):
-        """
-        @type args: tuple
-        @type **kw: str
-        @return: None
-        """
-        self._args = args
-        assert list(kw) in (['error'], [])
-        self._error = kw.get('error')
-
-    def __repr__(self):
-        """
-        __repr__
-        """
-        return '%s(%s)' % (self.__class__.__name__,
-                           ', '.join(repr(a) for a in self._args))
-
-    def validate(self, data):
-        """
-        @type data: str
-        @return: None
-        """
-        for s in [Schema(s, error=self._error) for s in self._args]:
-            data = s.validate(data)
-
-        return data
-
-
-class Or(And):
-    """
-    Or
-    """
-    def validate(self, data):
-        """
-        @type data: list, tuple
-        @return: None
-        """
-        x = SchemaError([], [])
-        for s in [Schema(s, error=self._error) for s in self._args]:
-            try:
-                return s.validate(data)
-            except SchemaError as _x:
-                x = _x
-        raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos, [self._error] + x.errors)
-
-
-class Use(object):
-    """
-    Use
-    """
-    def __init__(self, callable_, error=None):
-        """
-        @type callable_:  list, tuple
-        @type error: str, None
-        @return: None
-        """
-        assert callable(callable_)
-        self._callable = callable_
-        self._error = error
-
-    def __repr__(self):
-        """
-        __repr__
-        """
-        return '%s(%r)' % (self.__class__.__name__, self._callable)
-
-    def validate(self, data):
-        """
-        @type data: str
-        @return: None
-        """
-        try:
-            return self._callable(data)
-        except SchemaError as x:
-            raise SchemaError([None] + x.autos, [self._error] + x.errors)
-        except BaseException as x:
-            f = self._callable.__name__
-            raise SchemaError('%s(%r) raised %r' % (f, data, x), self._error)
-
 
 COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
-
-def priority(s):
-    """
-    @type s: object
-    @return: None
-    """
-    if type(s) in (list, tuple, set, frozenset):
-        return ITERABLE
-
-    if isinstance(s, dict):
-        return DICT
-
-    if issubclass(type(s), type):
-        return TYPE
-
-    if hasattr(s, 'validate'):
-        return VALIDATOR
-
-    if callable(s):
-        return CALLABLE
-    else:
-        return COMPARABLE
+MARKER = object()
 
 
 class Schema(object):
@@ -328,91 +173,37 @@ class Schema(object):
             raise SchemaError('%r does not match %r' % (s, data), e)
 
 
-MARKER = object()
-
-
-class Optional(Schema):
-    """Marker for an optional part of Schema."""
-    def __init__(self, *args, **kwargs):
+class And(object):
+    """
+    And
+    """
+    def __init__(self, *args, **kw):
         """
         @type args: tuple
-        @type kwargs: dict
+        @type **kw: str
         @return: None
         """
-        default = kwargs.pop('default', MARKER)
-        super(Optional, self).__init__(*args, **kwargs)
+        self._args = args
+        assert list(kw) in (['error'], [])
+        self._error = kw.get('error')
 
-        if default is not MARKER:
-            # See if I can come up with a static key to use for myself:
-            if priority(self._schema) != COMPARABLE:
-                raise TypeError(
+    def __repr__(self):
+        """
+        __repr__
+        """
+        return '%s(%s)' % (self.__class__.__name__,
 
-                    'Optional keys with defaults must have simple, '
-                    'predictable values, like literal strings or ints. '
-                    '"%r" is too complex.' % (self._schema,))
+                           ', '.join(repr(a) for a in self._args))
 
-            self.default = default
-            self.key = self._schema
+    def validate(self, data):
+        """
+        @type data: str
+        @return: None
+        """
+        for s in [Schema(s, error=self._error) for s in self._args]:
+            data = s.validate(data)
 
-
-def not_exists(path):
-    """
-    @type path: str
-    @return: None
-    """
-    return not exists(path)
-
-
-def flattened(mylist, newlist):
-    """
-    @type mylist: list
-    @type newlist: list
-    @return: None
-    """
-    for item in mylist:
-        if isinstance(item, list):
-            flattened(item, newlist)
-        else:
-            newlist.append(item)
-
-
-def abspath(p):
-    """
-    @type p: str
-    @return: None
-    """
-    return os.path.normpath(os.path.join(os.getcwd(), p))
-
-
-def delete_directory(dirpath, excluded_file_names):
-    """
-    @type dirpath: str
-    @type excluded_file_names: list, tuple
-    @return: int
-    """
-    for rootpath, dirs, files in os.walk(dirpath):
-        for f in files:
-            fp = os.path.join(rootpath, f)
-
-            for exname in excluded_file_names:
-                if not os.path.basename(fp) == exname:
-                    if os.path.exists(fp):
-                        os.remove(fp)
-
-    dirpaths = []
-
-    for rootpath, dirs, files in os.walk(dirpath):
-        dirpaths.append(rootpath)
-
-    dirpaths.sort(key=lambda x: len(x.split("/")))
-    dirpaths.reverse()
-
-    for rootpath in dirpaths:
-        if dirpath != rootpath:
-            if os.path.exists(rootpath):
-                os.removedirs(rootpath)
-
-    return len(list(os.walk(dirpath)))
+        return data
 
 
 class Arguments(object):
@@ -439,7 +230,9 @@ class Arguments(object):
         self.__add_parent(parent)
         self.parsedarguments = {}
         self.command = ""
-        self.validcommands = []
+
+        if not hasattr(self, "validcommands"):
+            self.validcommands = []
 
         if parent is not None:
             if hasattr(parent, "help") and parent.help is True:
@@ -636,6 +429,7 @@ class Arguments(object):
                         sorted_argv.insert(len(sorted_argv) - 1, options_argv)
                     else:
                         sorted_argv.insert(0, options_argv)
+
                 flattened(sorted_argv, flattened_sorted_argv)
 
                 # self.m_argv = flattened_sorted_argv
@@ -650,8 +444,8 @@ class Arguments(object):
                 arguments = dict(docopt(self.m_doc, self.m_argv, options_first=False, version=self.m_version))
                 self.parsedarguments = arguments.copy()
 
-                #if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
-                #    self.doprinthelp = True
+                if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
+                    self.doprinthelp = True
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
                     usage = self.get_usage_from_mdoc()
@@ -687,6 +481,7 @@ class Arguments(object):
                 if isinstance(arguments, dict):
                     for k in arguments:
                         console(k.strip(), color="red")
+
                 handle_ex(e)
         else:
             if isinstance(self.load, str) and self.load is not None:
@@ -740,9 +535,6 @@ class Arguments(object):
                     if command not in self.m_commandline_help:
                         if command not in self.m_commandline_help_default:
                             self.m_commandline_help_default[command] = str(" ".join(ls[1:])).strip()
-
-        if self.doprinthelp is True:
-            self.print_commandline_help()
 
     def set_command_help(self, command, helptext):
         """
@@ -798,7 +590,7 @@ class Arguments(object):
                             if line not in lineorg:
                                 print((spaces * " ") + line)
 
-            elif line.strip().startswith(self.command):
+            elif line.strip().startswith(self.command + " "):
                 print("\033[92m" + line + "\033[0m")
             else:
                 print(line)
@@ -878,6 +670,7 @@ class Arguments(object):
             if hasattr(v, "strip"):
                 v = v.strip("'")
                 v = v.strip('"')
+
             setattr(self, str(k), v)
 
     @staticmethod
@@ -999,3 +792,202 @@ class BaseArguments(Arguments):
                 raise SchemaError("tool", errors=cmd + ": command not found")
 
         return cmd
+
+
+class Optional(Schema):
+    """Marker for an optional part of Schema."""
+    def __init__(self, *args, **kwargs):
+        """
+        @type args: tuple
+        @type kwargs: dict
+        @return: None
+        """
+        default = kwargs.pop('default', MARKER)
+        super(Optional, self).__init__(*args, **kwargs)
+
+        if default is not MARKER:
+            # See if I can come up with a static key to use for myself:
+            if priority(self._schema) != COMPARABLE:
+                raise TypeError(
+
+                    'Optional keys with defaults must have simple, '
+                    'predictable values, like literal strings or ints. '
+                    '"%r" is too complex.' % (self._schema,))
+
+            self.default = default
+            self.key = self._schema
+
+
+class Or(And):
+    """
+    Or
+    """
+    def validate(self, data):
+        """
+        @type data: list, tuple
+        @return: None
+        """
+        x = SchemaError([], [])
+        for s in [Schema(s, error=self._error) for s in self._args]:
+            try:
+                return s.validate(data)
+            except SchemaError as _x:
+                x = _x
+        raise SchemaError(['%r did not validate %r' % (self, data)] + x.autos, [self._error] + x.errors)
+
+
+class SchemaError(Exception):
+    """Error during Schema validation."""
+    def __init__(self, autos, errors):
+        """
+        @type autos:  list, tuple, str
+        @type errors: list, str
+        @return: None
+        """
+        self.autos = autos if isinstance(autos, list) else [autos]
+        self.errors = errors if isinstance(errors, list) else [errors]
+        Exception.__init__(self, self.code)
+
+    @property
+    def code(self):
+        """
+        code
+        """
+
+        def uniq(seq):
+            """
+            @type seq: str
+            @return: None
+            """
+            seen = set()
+            seen_add = seen.add
+            return [x for x in seq if x not in seen and not seen_add(x)]
+
+        # noinspection PyTypeChecker
+        a = uniq(i for i in self.autos if i is not None)
+        # noinspection PyTypeChecker
+        e = uniq(i for i in self.errors if i is not None)
+
+        if e:
+            return '\n'.join(e)
+
+        return '\n'.join(a)
+
+
+class Use(object):
+    """
+    Use
+    """
+    def __init__(self, callable_, error=None):
+        """
+        @type callable_:  list, tuple
+        @type error: str, None
+        @return: None
+        """
+        assert callable(callable_)
+        self._callable = callable_
+        self._error = error
+
+    def __repr__(self):
+        """
+        __repr__
+        """
+        return '%s(%r)' % (self.__class__.__name__, self._callable)
+
+    def validate(self, data):
+        """
+        @type data: str
+        @return: None
+        """
+        try:
+            return self._callable(data)
+        except SchemaError as x:
+            raise SchemaError([None] + x.autos, [self._error] + x.errors)
+        except BaseException as x:
+            f = self._callable.__name__
+            raise SchemaError('%s(%r) raised %r' % (f, data, x), self._error)
+
+
+def abspath(p):
+    """
+    @type p: str
+    @return: None
+    """
+    return os.path.normpath(os.path.join(os.getcwd(), p))
+
+
+def delete_directory(dirpath, excluded_file_names):
+    """
+    @type dirpath: str
+    @type excluded_file_names: list, tuple
+    @return: int
+    """
+    for rootpath, dirs, files in os.walk(dirpath):
+        for f in files:
+            fp = os.path.join(rootpath, f)
+
+            for exname in excluded_file_names:
+                if not os.path.basename(fp) == exname:
+                    if os.path.exists(fp):
+                        os.remove(fp)
+
+    dirpaths = []
+
+    for rootpath, dirs, files in os.walk(dirpath):
+        dirpaths.append(rootpath)
+
+    dirpaths.sort(key=lambda x: len(x.split("/")))
+    dirpaths.reverse()
+
+    for rootpath in dirpaths:
+        if dirpath != rootpath:
+            if os.path.exists(rootpath):
+                os.removedirs(rootpath)
+
+    return len(list(os.walk(dirpath)))
+
+
+def flattened(mylist, newlist):
+    """
+    @type mylist: list
+    @type newlist: list
+    @return: None
+    """
+    for item in mylist:
+        if isinstance(item, list):
+            flattened(item, newlist)
+        else:
+            newlist.append(item)
+
+
+def not_exists(path):
+    """
+    @type path: str
+    @return: None
+    """
+    return not exists(path)
+
+
+def priority(s):
+    """
+    @type s: object
+    @return: None
+    """
+    if type(s) in (list, tuple, set, frozenset):
+        return ITERABLE
+
+    if isinstance(s, dict):
+        return DICT
+
+    if issubclass(type(s), type):
+        return TYPE
+
+    if hasattr(s, 'validate'):
+        return VALIDATOR
+
+    if callable(s):
+        return CALLABLE
+    else:
+        return COMPARABLE
+
+standard_library.install_aliases()
