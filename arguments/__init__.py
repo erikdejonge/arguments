@@ -6,16 +6,18 @@ arguments
 Active8 (04-03-15)
 license: GNU-GPL2
 """
+
 from __future__ import absolute_import, division, print_function, unicode_literals
+
 from future import standard_library
 
 import os
 import sys
 import yaml
+
 from consoleprinter import abort, console, console_warning, get_print_yaml, handle_ex, remove_extra_indentation, snake_case
 from fallbackdocopt import DocoptExit, docopt
 from os.path import exists, expanduser
-
 COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
 MARKER = object()
