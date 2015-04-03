@@ -6,18 +6,17 @@ arguments
 Active8 (04-03-15)
 license: GNU-GPL2
 """
-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
+from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
 
 import os
 import sys
 import yaml
 
-from consoleprinter import abort, console, console_warning, get_print_yaml, handle_ex, remove_extra_indentation, snake_case
-from fallbackdocopt import DocoptExit, docopt
+from fallbackdocopt import docopt, DocoptExit
 from os.path import exists, expanduser
+from consoleprinter import abort, console, handle_ex, snake_case, get_print_yaml, console_warning, remove_extra_indentation
+
 COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
 MARKER = object()
@@ -293,10 +292,9 @@ class Arguments(object):
                         if self.m_argv[-2] is self.command and self.command in self.validcommands:
                             self.print_commandline_help(usageonly=False)
                         else:
-
                             if self.doprinthelp:
-
                                 self.print_commandline_help(usageonly=False)
+
                                 if self.m_parents is not None:
                                     raise SystemExit(0)
 
@@ -510,7 +508,6 @@ class Arguments(object):
             raise
 
         options, positional_arguments = self.sort_arguments(arguments)
-
         self._set_fields(positional_arguments, options)
         checking_commands = False
 
@@ -577,7 +574,8 @@ class Arguments(object):
 
                             # noinspection PyUnresolvedReferences
                             line = "️\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
-                            #line = line.replace(ls[0], "", 1).strip()
+
+                            # line = line.replace(ls[0], "", 1).strip()
 
                             if line not in lineorg:
                                 print((spaces * " ") + line)
