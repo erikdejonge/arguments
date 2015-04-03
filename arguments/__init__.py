@@ -510,6 +510,7 @@ class Arguments(object):
             raise
 
         options, positional_arguments = self.sort_arguments(arguments)
+
         self._set_fields(positional_arguments, options)
         checking_commands = False
 
