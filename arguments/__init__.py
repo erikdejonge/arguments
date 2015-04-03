@@ -293,23 +293,12 @@ class Arguments(object):
                         if self.m_argv[-2] is self.command and self.command in self.validcommands:
                             self.print_commandline_help(usageonly=False)
                         else:
-                            argvreverse = self.m_argv
-                            argvreverse.reverse()
-                            doexit = True
 
-                            for argv in argvreverse:
-                                # noinspection PyUnresolvedReferences
-                                if argv in self.validcommands and self.m_parents and len(self.m_parents) > 0:
-                                    self.print_commandline_help(usageonly=False)
+                            if self.doprinthelp:
 
-                                if argv in self.validcommands:
-                                    if self.m_parents is None:
-                                        doexit = False
-                                    elif self.m_parents is not None and len(self.m_parents) == 0:
-                                        doexit = False
-
-                            if doexit is True:
-                                raise SystemExit(0)
+                                self.print_commandline_help(usageonly=False)
+                                if self.m_parents is not None:
+                                    raise SystemExit(0)
 
             if self.write is not None:
                 fp = open(self.write, "w")
