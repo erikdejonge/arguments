@@ -15,7 +15,7 @@ import yaml
 
 from fallbackdocopt import docopt, DocoptExit
 from os.path import exists, expanduser
-from consoleprinter import abort, console, handle_ex, snake_case, get_print_yaml, console_warning, remove_extra_indentation
+from consoleprinter import remove_escapecodes, abort, console, handle_ex, snake_case, get_print_yaml, console_warning, remove_extra_indentation
 
 COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
@@ -563,8 +563,9 @@ class Arguments(object):
                     if ls:
                         # noinspection PyUnresolvedReferences
                         if ls[0] == self.command:
-                            js = "".join(line.split(ls[0]))
-                            lenjs = len(ls[0].strip())
+                            js = remove_escapecodes("".join(line.split(ls[0], maxsplit=1)))
+
+                            lenjs = len(remove_escapecodes(ls[0]).strip())
 
                             if lenjs < 3:
                                 lenjs = 1
