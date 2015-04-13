@@ -335,7 +335,7 @@ class Arguments(object):
 
         for line in doc.split("\n"):
             if cmdbuffering is True:
-                ls = line.strip().split(" ")
+                ls = line.strip().split()
 
                 if len(ls) > 0 and len(ls[0].strip()) > 0:
                     commands[ls[0]] = " ".join(ls[1:])
@@ -516,7 +516,7 @@ class Arguments(object):
                 checking_commands = True
 
             if checking_commands is True:
-                ls = [x for x in line.split(" ") if x]
+                ls = [x for x in line.split() if x]
 
                 if len(ls) > 1:
                     command = ls[0].strip()
@@ -551,7 +551,7 @@ class Arguments(object):
             usage = self.m_doc
 
         for line in usage.split("\n"):
-            ls = line.split(" ")
+            ls = line.split()
 
             # noinspection PyUnresolvedReferences
             if self.command in self.m_commandline_help and line.strip().startswith(self.command):
