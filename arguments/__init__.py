@@ -780,7 +780,7 @@ class BaseArguments(Arguments):
 
         if len(self.validcommands) > 0:
             if cmd.lower() not in self.validcommands:
-                raise SchemaError("tool", errors=cmd + ": command not found")
+                raise SchemaError("tool", errors=cmd + " command not found")
 
         return cmd
 
