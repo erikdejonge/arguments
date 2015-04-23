@@ -12,10 +12,11 @@ from future import standard_library
 import os
 import sys
 import yaml
+import pickle
 
 from fallbackdocopt import docopt, DocoptExit
 from os.path import exists, expanduser
-from consoleprinter import remove_escapecodes, abort, console, handle_ex, snake_case, get_print_yaml, console_warning, remove_extra_indentation
+from consoleprinter import abort, console, handle_ex, snake_case, get_print_yaml, console_warning, remove_escapecodes, remove_extra_indentation
 
 COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
@@ -97,6 +98,7 @@ class Schema(object):
                         except SchemaError as _x:
                             # noinspection PyUnusedLocal
                             x = _x
+
                             raise
                         else:
                             (covered_optionals if isinstance(skey, Optional)
@@ -123,6 +125,7 @@ class Schema(object):
             if len(new) != len(data):
                 wrong_keys = set(data.keys()) - set(new.keys())
                 s_wrong_keys = ', '.join('%r' % (k,) for k in sorted(wrong_keys))
+
                 raise SchemaError('wrong keys %s in %r' % (s_wrong_keys, data), e)
 
             # Apply default-having optionals that haven't been used:
@@ -276,9 +279,11 @@ class Arguments(object):
                 parsedok = True
             except DocoptExit:
                 exdoc = True
+
                 raise
             except SystemExit:
                 sysex = True
+
                 raise
 
             finally:
@@ -439,11 +444,13 @@ class Arguments(object):
                 if self.m_alwaysfullhelp is True:
                     usage = self.get_usage_from_mdoc()
                     print(usage)
+
                     raise SystemExit(0)
                 else:
                     if "-h" in self.m_argv or "--help" in self.m_argv:
                         print(self.m_doc.strip())
                         print()
+
                         raise SystemExit(0)
                     else:
                         raise
@@ -505,6 +512,7 @@ class Arguments(object):
             abort(name, "".join([x for x in e.errors if x]))
             print()
             print(self.m_doc.strip())
+
             raise
 
         options, positional_arguments = self.sort_arguments(arguments)
@@ -564,7 +572,6 @@ class Arguments(object):
                         # noinspection PyUnresolvedReferences
                         if ls[0] == self.command:
                             js = remove_escapecodes("".join(line.split(ls[0], maxsplit=1)))
-
                             lenjs = len(remove_escapecodes(ls[0]).strip())
 
                             if lenjs < 3:
@@ -740,6 +747,28 @@ class Arguments(object):
         """
         self.m_reprdict = yaml.load(yamldata)
 
+    def save(self, path):
+        """
+        """
+
+        dirname = os.path.dirname(path)
+
+        if len(dirname) > 0:
+            if not os.path.exists(dirname):
+                os.makedirs(dirname, exist_ok=True)
+
+        self.set_reprdict_from_attributes()
+        pickle.dump(self.m_reprdict, open(path, "wb"))
+
+    def load(self, path):
+        """
+        """
+
+        if not os.path.exists(path):
+            raise FileExistsError(path)
+
+        self.m_reprdict = pickle.load(open(path, "rb"))
+
 
 class BaseArguments(Arguments):
     """
@@ -896,6 +925,7 @@ class Use(object):
             raise SchemaError([None] + x.autos, [self._error] + x.errors)
         except BaseException as x:
             f = self._callable.__name__
+
             raise SchemaError('%s(%r) raised %r' % (f, data, x), self._error)
 
 
