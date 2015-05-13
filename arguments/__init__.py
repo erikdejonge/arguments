@@ -302,7 +302,8 @@ class Arguments(object):
 
                                 if self.m_parents is not None:
                                     raise SystemExit(0)
-
+                    else:
+                        self.print_commandline_help(usageonly=False)
             if self.write is not None:
                 fp = open(self.write, "w")
                 self.write = ""
