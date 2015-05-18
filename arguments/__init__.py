@@ -253,6 +253,7 @@ class Arguments(object):
 
         if doc is not None:
             triggerword = "usage"
+
             newdoc = remove_extra_indentation(doc, triggerword)
             self.m_doc = self.reorder_commandlist(newdoc)
 
@@ -361,12 +362,14 @@ class Arguments(object):
 
         for cmd in commandkeys:
             if len(commands[cmd].strip()) > 0:
+
                 newdoc += " " * 4
                 newdoc += cmd
                 newdoc += " " * 2
                 newdoc += " " * (longest - len(cmd))
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
+
 
         return newdoc.strip()
 
