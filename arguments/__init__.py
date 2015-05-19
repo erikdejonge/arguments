@@ -11,8 +11,10 @@ from future import standard_library
 
 import os
 import sys
+import json
 import yaml
 import pickle
+import collections
 
 from fallbackdocopt import docopt, DocoptExit
 from os.path import exists, expanduser
@@ -253,7 +255,6 @@ class Arguments(object):
 
         if doc is not None:
             triggerword = "usage"
-
             newdoc = remove_extra_indentation(doc, triggerword)
             self.m_doc = self.reorder_commandlist(newdoc)
 
@@ -305,6 +306,7 @@ class Arguments(object):
                                     raise SystemExit(0)
                     else:
                         self.print_commandline_help(usageonly=False)
+
             if self.write is not None:
                 fp = open(self.write, "w")
                 self.write = ""
@@ -362,14 +364,12 @@ class Arguments(object):
 
         for cmd in commandkeys:
             if len(commands[cmd].strip()) > 0:
-
                 newdoc += " " * 4
                 newdoc += cmd
                 newdoc += " " * 2
                 newdoc += " " * (longest - len(cmd))
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
-
 
         return newdoc.strip()
 
@@ -463,7 +463,15 @@ class Arguments(object):
             try:
                 if isinstance(arguments, dict):
                     for k in arguments:
-                        if "folder" in k or "path" in k:
+                        trypath = False
+
+                        if isinstance(arguments[k], str):
+                            trypath = "~" in arguments[k] or "/" in arguments[k]
+
+                        if trypath is False:
+                            trypath = "folder" in k or "path" in k
+
+                        if trypath:
                             if hasattr(arguments[k], "replace"):
                                 arguments[k] = arguments[k].replace("~", expanduser("~"))
 
@@ -633,26 +641,56 @@ class Arguments(object):
         name += self.snake_case_class_name()
         return name
 
-    def for_print(self):
-        """
-        for_print
-        """
-        return self.as_string()
-
     def as_string(self):
         """
         as_string
         """
         return get_print_yaml(self.as_yaml())
 
+    def for_print(self):
+        """
+        for_print
+        """
+        s = self.get_object_info()
+        s += "\n"
+        s += self.as_string()
+        return s
+
     def __str__(self):
         """
         __str__
         """
-        s = (str(self.__class__).replace(">", "").replace("class ", "").replace("'", "") + " object at 0x%x>" % id(self))
-        s += "\n"
-        s += get_print_yaml(self.as_yaml())
+        if not sys.stdout.isatty():
+            self.set_reprdict_from_attributes()
+            value = self.m_reprdict
+            s = self.get_objectdata_json(str(value))
+        else:
+            s = self.get_object_info()
+            s += "\n"
+            s += get_print_yaml(self.as_yaml())
+
         return s
+
+    def get_objectdata_json(self, value):
+        """
+        @type value: str
+        @return: str
+        """
+        od = collections.OrderedDict()
+        s = "{} class 0x{:x}".format(self.__class__.__name__, id(self))
+        od["o"] = s
+        od["v"] = str(value)
+        return json.dumps(od)
+
+    def get_object_info(self):
+        """
+        Returns object info in following form <module.class object at address>
+        """
+        objectinfo = str(self.__class__).replace(">", "")
+        objectinfo = objectinfo.replace("class ", "")
+        objectinfo = objectinfo.replace("'", "")
+        objectinfo += " object at 0x%x>" % id(self)
+        return objectinfo
 
     def _set_fields(self, positional, options):
         """
@@ -753,8 +791,9 @@ class Arguments(object):
 
     def save(self, path):
         """
+        @type path: str
+        @return: None
         """
-
         dirname = os.path.dirname(path)
 
         if len(dirname) > 0:
@@ -766,8 +805,9 @@ class Arguments(object):
 
     def load(self, path):
         """
+        @type path: str
+        @return: None
         """
-
         if not os.path.exists(path):
             raise FileExistsError(path)
 
