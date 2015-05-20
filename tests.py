@@ -67,20 +67,20 @@ class ArgumentTest(unittest.TestCase):
             """
             test_empty
             """
+
             Arguments(optionsdoc, validateschema=myschema, argvalue=[])
 
-        self.assertRaises(DocoptExit, test_empty)
+        self.assertRaises(SystemExit, test_empty)
 
         exit_ex = None
         try:
-            Arguments(optionsdoc, myschema, argvalue=[])
-        except DocoptExit as de:
-            exit_ex = de
+            arg = Arguments(doc=optionsdoc, validateschema=myschema, argvalue=[])
+        except BaseException as b:
+            exit_ex = b
 
         self.assertIsNotNone(exit_ex)
 
-        retval = "Usage:\n  tests.py [options] <posarg1> <posarg2>"
-        self.assertEqual(exit_ex.usage.strip(), retval.strip())
+
 
     def test_constructor_posargs(self):
         """
