@@ -382,7 +382,7 @@ class Arguments(object):
         usage = self.m_doc.strip().split("Usage:")
 
         if len(usage) > 1:
-            usage = "\033[34mUsage:\033[34m" + usage[1]
+            usage = "\033[34mUsage:\033[33m" + usage[1]
 
         return "\n".join(usage.strip().split("\n")[:2]) + "\033[0m"
 
@@ -675,7 +675,7 @@ class Arguments(object):
         """
         for_print
         """
-        s = self.get_object_info()
+        s = "\033[34m"+self.get_object_info()+"\033[0m"
         s += "\n"
         s += self.as_string()
         return s
