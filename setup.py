@@ -7,7 +7,7 @@ license: GNU-GPL2
 
 from setuptools import setup
 setup(name='arguments',
-      version='44',
+      version='45',
       description='Argument parser based on docopt',
       url='https://github.com/erikdejonge/arguments',
       author='Erik de Jonge',
