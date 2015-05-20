@@ -153,7 +153,7 @@ class Schema(object):
             except SchemaError as x:
                 raise SchemaError([None] + x.autos, [e] + x.errors)
             except BaseException as x:
-                raise SchemaError('%r.validate(%r) raised %r' % (s, data, x),self._error)
+                raise SchemaError('%r.validate(%r) raised %r' % (s, data, x), self._error)
 
         if flavor == CALLABLE:
             f = s.__name__
@@ -306,9 +306,9 @@ class Arguments(object):
                         self.print_commandline_help(usageonly=False)
                 else:
                     if exdoc is True:
-                        print(self.get_usage_from_mdoc() )
-
+                        print(self.get_usage_from_mdoc())
                         exit(1)
+
             if self.write is not None:
                 fp = open(self.write, "w")
                 self.write = ""
@@ -382,9 +382,9 @@ class Arguments(object):
         usage = self.m_doc.strip().split("Usage:")
 
         if len(usage) > 1:
-            usage = "\033[34mUsage:\033[33m" + usage[1]
+            usage = "\033[34mUsage:\033[34m" + usage[1]
 
-        return "\n".join(usage.strip().split("\n")[:2])+"\033[0m"
+        return "\n".join(usage.strip().split("\n")[:2]) + "\033[0m"
 
     def parse_arguments(self, schema=True):
         """
@@ -447,35 +447,37 @@ class Arguments(object):
                 if "--help" in [s for s in arguments.keys() if isinstance(s, str)] or "-h" in [s for s in arguments.keys() if isinstance(s, str)]:
                     self.doprinthelp = True
             except DocoptExit:
-
                 if self.m_alwaysfullhelp is True:
                     usage = self.get_usage_from_mdoc()
-
-                    print("\033[34m"+usage+"\033[0m")
+                    print("\033[34m" + usage + "\033[0m")
 
                     raise SystemExit(0)
                 else:
                     if "-h" in self.m_argv or "--help" in self.m_argv:
                         doc_help = self.m_doc.strip().split("\n")
+
                         if len(doc_help) > 0:
                             print("\033[33m--\033[0m")
-                            print("\033[34m"+doc_help[0]+"\033[0m")
+                            print("\033[34m" + doc_help[0] + "\033[0m")
+
                             asp = "author  :"
                             doc_help_rest = "\n".join(doc_help[1:])
+
                             if asp in doc_help_rest:
                                 doc_help_rest = doc_help_rest.split("author  :")
-                                if len(doc_help_rest)>1:
-                                    print("\n\033[33m"+doc_help_rest[0].strip()+"\n")
-                                    print("\033[37m" + asp+doc_help_rest[1]  + "\033[0m")
+
+                                if len(doc_help_rest) > 1:
+                                    print("\n\033[33m" + doc_help_rest[0].strip() + "\n")
+                                    print("\033[37m" + asp + doc_help_rest[1] + "\033[0m")
                                 else:
                                     print(doc_help_rest)
                             else:
                                 print(doc_help_rest)
+
                             print("\033[33m--\033[0m")
                         else:
                             print("\033[31mERROR, doc should have more then one line\033[0m")
                             print(self.m_doc)
-
 
                         raise SystemExit(0)
                     else:
@@ -615,7 +617,7 @@ class Arguments(object):
                             lineorg = line
 
                             # noinspection PyUnresolvedReferences
-                            line = "️\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
+                            line = "\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
 
                             # line = line.replace(ls[0], "", 1).strip()
 
