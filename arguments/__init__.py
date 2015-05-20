@@ -597,7 +597,7 @@ class Arguments(object):
 
             # noinspection PyUnresolvedReferences
             if self.command in self.m_commandline_help and line.strip().startswith(self.command):
-                print("\033[92m" + line + "\033[0m")
+                print("\033[32m" + line + "\033[0m")
 
                 if len(ls) > 0:
                     ls = [x for x in ls if x]
@@ -623,7 +623,7 @@ class Arguments(object):
                                 print((spaces * " ") + line)
 
             elif line.strip().startswith(self.command + " "):
-                print("\033[92m" + line + "\033[0m")
+                print("\033[32m" + line + "\033[0m")
             else:
                 print(line)
 
