@@ -2,7 +2,6 @@
 # coding=utf-8
 """
 arguments
-
 Active8 (04-03-15)
 license: GNU-GPL2
 """
@@ -32,7 +31,9 @@ class Schema(object):
     def __init__(self, schema, error=None):
         """
         @type schema:  list, tuple
+
         @type error:  list, tuple
+
         @return: None
         """
         self._schema = schema
@@ -47,6 +48,7 @@ class Schema(object):
     def add_void_schema_item(self, key):
         """
         @type key: str
+
         @return: None
         """
         # noinspection PyUnresolvedReferences
@@ -62,6 +64,7 @@ class Schema(object):
     def validate(self, data):
         """
         @type data: dict
+
         @return: None
         """
         s = self._schema
@@ -184,7 +187,9 @@ class And(object):
     def __init__(self, *args, **kw):
         """
         @type args: tuple
+
         @type **kw: str
+
         @return: None
         """
         self._args = args
@@ -202,6 +207,7 @@ class And(object):
     def validate(self, data):
         """
         @type data: str
+
         @return: None
         """
         for s in [Schema(s, error=self._error) for s in self._args]:
@@ -217,11 +223,17 @@ class Arguments(object):
     def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None, parent=None):
         """
         @type doc: str, None
+
         @type validateschema: Schema, None
+
         @type yamlfile: str, None
+
         @type yamlstr: str, None
+
         @type parse_arguments: bool
+
         @type argvalue: str, None
+
         @return: None
         """
         self.doprinthelp = False
@@ -324,6 +336,7 @@ class Arguments(object):
     def __add_parent(self, parent):
         """
         @type parent: Arguments
+
         @return: None
         """
         if not hasattr(self, "m_parents"):
@@ -338,6 +351,7 @@ class Arguments(object):
     def reorder_commandlist(doc):
         """
         @type doc: str
+
         @return: None
         """
         cmdbuffering = False
@@ -382,7 +396,7 @@ class Arguments(object):
         usage = self.m_doc.strip().split("Usage:")
 
         if len(usage) > 1:
-            usage = "\033[34mUsage:\033[33m" + usage[1]
+            usage = "\033[34mUsage:\033[34m" + usage[1]
 
         return "\n".join(usage.strip().split("\n")[:2]) + "\033[0m"
 
@@ -675,9 +689,57 @@ class Arguments(object):
         """
         for_print
         """
-        s = "\033[34m"+self.get_object_info()+"\033[0m"
+        s = "\033[34m" + self.get_object_info() + "\033[0m"
         s += "\n"
         s += self.as_string()
+        return s
+
+    def get_subclass(self):
+        """
+        get_subclass
+        """
+        s = """
+            from arguments import Arguments
+            class IArguments(Arguments):
+                \"\"\"
+                IArguments
+                \"\"\"
+                def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None, parent=None):
+                    \"\"\"
+                    @type doc: str, None
+                    @type validateschema: Schema, None
+                    @type yamlfile: str, None
+                    @type yamlstr: str, None
+                    @type parse_arguments: bool
+                    @type argvalue: str, None
+                    @return: None
+                    \"\"\"
+        """
+        s = remove_extra_indentation(s)
+        s += "\n"
+        self.set_reprdict_from_attributes()
+        ks = list(self.m_reprdict["positional"].keys())
+        ks.extend(list(self.m_reprdict["options"].keys()))
+        ks.sort()
+
+        for k in ks:
+            s += 8 * " " + "self." + k + "="
+            if k in self.m_reprdict["positional"]:
+                td = self.m_reprdict["positional"]
+
+                if isinstance(td[k], int):
+                    s += "0"
+                elif isinstance(td[k], float):
+                    s += "0.0"
+                elif isinstance(td[k], bool):
+                    s += "False"
+                else:
+                    s += '""'
+            else:
+                s += "False"
+
+            s += "\n"
+        s += 8 * " " + "super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)\n\n"
         return s
 
     def __str__(self):
