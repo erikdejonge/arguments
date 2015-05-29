@@ -754,7 +754,7 @@ class Arguments(object):
             s = self.get_object_info()
             s += "\n"
             s += get_print_yaml(self.as_yaml())
-
+            s += "\033[37m"+self.get_subclass()+"\033[0m"
         return s
 
     def get_objectdata_json(self, value):
