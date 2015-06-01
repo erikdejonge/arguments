@@ -31,9 +31,7 @@ class Schema(object):
     def __init__(self, schema, error=None):
         """
         @type schema:  list, tuple
-
         @type error:  list, tuple
-
         @return: None
         """
         self._schema = schema
@@ -48,7 +46,6 @@ class Schema(object):
     def add_void_schema_item(self, key):
         """
         @type key: str
-
         @return: None
         """
         # noinspection PyUnresolvedReferences
@@ -64,7 +61,6 @@ class Schema(object):
     def validate(self, data):
         """
         @type data: dict
-
         @return: None
         """
         s = self._schema
@@ -187,9 +183,7 @@ class And(object):
     def __init__(self, *args, **kw):
         """
         @type args: tuple
-
         @type **kw: str
-
         @return: None
         """
         self._args = args
@@ -207,7 +201,6 @@ class And(object):
     def validate(self, data):
         """
         @type data: str
-
         @return: None
         """
         for s in [Schema(s, error=self._error) for s in self._args]:
@@ -223,17 +216,11 @@ class Arguments(object):
     def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None, parent=None):
         """
         @type doc: str, None
-
         @type validateschema: Schema, None
-
         @type yamlfile: str, None
-
         @type yamlstr: str, None
-
         @type parse_arguments: bool
-
         @type argvalue: str, None
-
         @return: None
         """
         self.doprinthelp = False
@@ -336,7 +323,6 @@ class Arguments(object):
     def __add_parent(self, parent):
         """
         @type parent: Arguments
-
         @return: None
         """
         if not hasattr(self, "m_parents"):
@@ -351,7 +337,6 @@ class Arguments(object):
     def reorder_commandlist(doc):
         """
         @type doc: str
-
         @return: None
         """
         cmdbuffering = False
@@ -468,30 +453,7 @@ class Arguments(object):
                     raise SystemExit(0)
                 else:
                     if "-h" in self.m_argv or "--help" in self.m_argv:
-                        doc_help = self.m_doc.strip().split("\n")
-
-                        if len(doc_help) > 0:
-                            print("\033[33m--\033[0m")
-                            print("\033[34m" + doc_help[0] + "\033[0m")
-
-                            asp = "author  :"
-                            doc_help_rest = "\n".join(doc_help[1:])
-
-                            if asp in doc_help_rest:
-                                doc_help_rest = doc_help_rest.split("author  :")
-
-                                if len(doc_help_rest) > 1:
-                                    print("\n\033[33m" + doc_help_rest[0].strip() + "\n")
-                                    print("\033[37m" + asp + doc_help_rest[1] + "\033[0m")
-                                else:
-                                    print(doc_help_rest)
-                            else:
-                                print(doc_help_rest)
-
-                            print("\033[33m--\033[0m")
-                        else:
-                            print("\033[31mERROR, doc should have more then one line\033[0m")
-                            print(self.m_doc)
+                        self.print_commandless_help()
 
                         raise SystemExit(0)
                     else:
@@ -583,6 +545,35 @@ class Arguments(object):
                         if command not in self.m_commandline_help_default:
                             self.m_commandline_help_default[command] = str(" ".join(ls[1:])).strip()
 
+    def print_commandless_help(self):
+        """
+        print_commandless_help
+        """
+        doc_help = self.m_doc.strip().split("\n")
+
+        if len(doc_help) > 0:
+            print("\033[33m--\033[0m")
+            print("\033[34m" + doc_help[0] + "\033[0m")
+
+            asp = "author  :"
+            doc_help_rest = "\n".join(doc_help[1:])
+
+            if asp in doc_help_rest:
+                doc_help_rest = doc_help_rest.split("author  :")
+
+                if len(doc_help_rest) > 1:
+                    print("\n\033[33m" + doc_help_rest[0].strip() + "\n")
+                    print("\033[37m" + asp + doc_help_rest[1] + "\033[0m")
+                else:
+                    print(doc_help_rest)
+            else:
+                print(doc_help_rest)
+
+            print("\033[33m--\033[0m")
+        else:
+            print("\033[31mERROR, doc should have more then one line\033[0m")
+            print(self.m_doc)
+
     def set_command_help(self, command, helptext):
         """
         @type command: str
@@ -608,40 +599,51 @@ class Arguments(object):
         else:
             usage = self.m_doc
 
-        for line in usage.split("\n"):
-            ls = line.split()
+        have_command = False
 
+        for line in usage.split("\n"):
             # noinspection PyUnresolvedReferences
             if self.command in self.m_commandline_help and line.strip().startswith(self.command):
-                print("\033[32m" + line + "\033[0m")
+                have_command = True
+                break
 
-                if len(ls) > 0:
-                    ls = [x for x in ls if x]
+        if have_command:
+            for line in usage.split("\n"):
+                ls = line.split()
 
-                    if ls:
-                        # noinspection PyUnresolvedReferences
-                        if ls[0] == self.command:
-                            js = remove_escapecodes("".join(line.split(ls[0], maxsplit=1)))
-                            lenjs = len(remove_escapecodes(ls[0]).strip())
+                # noinspection PyUnresolvedReferences
+                if self.command in self.m_commandline_help and line.strip().startswith(self.command):
+                    print("\033[32m" + line + "\033[0m")
 
-                            if lenjs < 3:
-                                lenjs = 1
+                    if len(ls) > 0:
+                        ls = [x for x in ls if x]
 
-                            spaces = (len(js) - len(js.strip())) + lenjs
-                            lineorg = line
-
+                        if ls:
                             # noinspection PyUnresolvedReferences
-                            line = "\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
+                            if ls[0] == self.command:
+                                js = remove_escapecodes("".join(line.split(ls[0], maxsplit=1)))
+                                lenjs = len(remove_escapecodes(ls[0]).strip())
 
-                            # line = line.replace(ls[0], "", 1).strip()
+                                if lenjs < 3:
+                                    lenjs = 1
 
-                            if line not in lineorg:
-                                print((spaces * " ") + line)
+                                spaces = (len(js) - len(js.strip())) + lenjs
+                                lineorg = line
 
-            elif line.strip().startswith(self.command + " "):
-                print("\033[32m" + line + "\033[0m")
-            else:
-                print(line)
+                                # noinspection PyUnresolvedReferences
+                                line = "\033[36m" + self.m_commandline_help[self.command] + "\033[0m"
+
+                                # line = line.replace(ls[0], "", 1).strip()
+
+                                if line not in lineorg:
+                                    print((spaces * " ") + line)
+
+                elif line.strip().startswith(self.command + " "):
+                    print("\033[32m" + line + "\033[0m")
+                else:
+                    print(line)
+        else:
+            self.print_commandless_help()
 
         return True
 
@@ -698,8 +700,7 @@ class Arguments(object):
         """
         get_subclass
         """
-        s = """
-            from arguments import Arguments
+        strbldr = """
             class IArguments(Arguments):
                 \"\"\"
                 IArguments
@@ -715,23 +716,48 @@ class Arguments(object):
                     @return: None
                     \"\"\"
         """
-        s = remove_extra_indentation(s)
-        s += "\n"
+        strbldr = remove_extra_indentation(strbldr)
+        strbldr += "\n"
         self.set_reprdict_from_attributes()
-        ks = list(self.m_reprdict["positional"].keys())
-        ks.extend(list(self.m_reprdict["options"].keys()))
-        ks.sort()
+        strbldr += self.write_members()
+        strbldr += 8 * " " + "super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)\n\n"
+        strbldr2 = """
+            class IArguments(Arguments):
+                \"\"\"
+                IArguments
+                \"\"\"
+                def __init__(self, doc):
+                    \"\"\"
+                    __init__
+                    \"\"\"
+        """
+        strbldr2 = remove_extra_indentation(strbldr2)
+        strbldr2 += "\n"
+        strbldr2 += self.write_members()
+        strbldr2 += 8 * " " + "super().__init__(doc)\n\n"
+        return strbldr + "\n\n" + strbldr2
 
-        for k in ks:
-            s += 8 * " " + "self." + k + "="
-            if k in self.m_reprdict["positional"]:
+    def write_members(self):
+        """
+        @type s: list
+        @return: None
+        """
+        s = ""
+        objattributes = list(self.m_reprdict["positional"].keys())
+        objattributes.extend(list(self.m_reprdict["options"].keys()))
+        objattributes.sort()
+
+        for objattr in objattributes:
+            s += 8 * " " + "self." + objattr + "="
+
+            if objattr in self.m_reprdict["positional"]:
                 td = self.m_reprdict["positional"]
 
-                if isinstance(td[k], int):
+                if isinstance(td[objattr], int):
                     s += "0"
-                elif isinstance(td[k], float):
+                elif isinstance(td[objattr], float):
                     s += "0.0"
-                elif isinstance(td[k], bool):
+                elif isinstance(td[objattr], bool):
                     s += "False"
                 else:
                     s += '""'
@@ -739,7 +765,7 @@ class Arguments(object):
                 s += "False"
 
             s += "\n"
-        s += 8 * " " + "super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)\n\n"
+
         return s
 
     def __str__(self):
@@ -754,7 +780,8 @@ class Arguments(object):
             s = self.get_object_info()
             s += "\n"
             s += get_print_yaml(self.as_yaml())
-            s += "\033[37m"+self.get_subclass()+"\033[0m"
+            s += "\033[37m" + self.get_subclass() + "\033[0m"
+
         return s
 
     def get_objectdata_json(self, value):
