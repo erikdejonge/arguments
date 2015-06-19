@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # coding=utf-8
 """
+
 Usage:
 Inherit from baseclass
-
 arguments
+
 Active8 (04-03-15)
 license: GNU-GPL2
 """
@@ -484,7 +485,11 @@ class Arguments(object):
                                 if "./" in arguments[k].strip():
                                     arguments[k] = arguments[k].replace("./", os.getcwd() + "/")
 
-                                arguments[k] = arguments[k].rstrip("/").strip()
+                                if arguments[k].rstrip("/").strip() != "/":
+                                    arguments[k] = arguments[k].rstrip("/").strip()
+
+                            if arguments[k].strip() == "":
+                                arguments[k] = "/"
 
             except AttributeError as e:
                 console("Attribute error:" + k.strip(), "->", str(e), color="red")
@@ -780,10 +785,10 @@ class Arguments(object):
             value = self.m_reprdict
             s = self.get_objectdata_json(str(value))
         else:
-            s = self.get_object_info()
+            s = "\033[37m" + self.get_subclass() + "\033[0m"
+            s += self.get_object_info()
             s += "\n"
             s += get_print_yaml(self.as_yaml())
-            s += "\033[37m" + self.get_subclass() + "\033[0m"
 
         return s
 
