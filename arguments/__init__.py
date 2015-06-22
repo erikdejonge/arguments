@@ -376,7 +376,7 @@ class Arguments(object):
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
 
-        
+
 
 
         return newdoc.strip()
