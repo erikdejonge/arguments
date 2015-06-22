@@ -227,6 +227,7 @@ class Arguments(object):
         @type argvalue: str, None
         @return: None
         """
+
         self.doprinthelp = False
         self.m_once = None
         self.write = None
@@ -346,7 +347,6 @@ class Arguments(object):
         cmdbuffering = False
         commands = {}
         newdoc = ""
-
         for line in doc.split("\n"):
             if cmdbuffering is True:
                 ls = line.strip().split()
@@ -375,6 +375,9 @@ class Arguments(object):
                 newdoc += " " * (longest - len(cmd))
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
+
+        
+
 
         return newdoc.strip()
 
@@ -451,8 +454,13 @@ class Arguments(object):
                     self.doprinthelp = True
             except DocoptExit:
                 if self.m_alwaysfullhelp is True:
-                    usage = self.get_usage_from_mdoc()
-                    print("\033[34m" + usage + "\033[0m")
+                    for sarg in list(sys.argv):
+                        if "-h" in sarg or "--help" in sarg:
+                            self.print_commandless_help()
+                            break
+                    else:
+                        usage = self.get_usage_from_mdoc()
+                        print("\033[34m" + usage + "\033[0m")
 
                     raise SystemExit(0)
                 else:
@@ -488,7 +496,7 @@ class Arguments(object):
                                 if arguments[k].rstrip("/").strip() != "/":
                                     arguments[k] = arguments[k].rstrip("/").strip()
 
-                            if arguments[k].strip() == "":
+                            if hasattr(arguments[k], "strip") and arguments[k].strip() == "":
                                 arguments[k] = "/"
 
             except AttributeError as e:
@@ -956,7 +964,8 @@ class BaseArguments(Arguments):
 
         # noinspection PyUnusedLocal
         args = []
-        self.reorder_commandlist(doc)
+
+
         super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)
 
     def validcommand(self, cmd):
