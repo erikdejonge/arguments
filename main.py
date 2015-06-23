@@ -44,6 +44,7 @@ def main():
     """
     args = IArguments(doc=__doc__)
     print(args)
+    print("main")
 
 
 if __name__ == "__main__":

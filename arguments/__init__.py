@@ -227,7 +227,6 @@ class Arguments(object):
         @type argvalue: str, None
         @return: None
         """
-
         self.doprinthelp = False
         self.m_once = None
         self.write = None
@@ -296,22 +295,26 @@ class Arguments(object):
 
                 if hasattr(self, "help") and getattr(self, "help") is True:
                     # noinspection PyUnresolvedReferences
+
+
                     if self.command and len(self.m_argv) > 1:
                         # noinspection PyUnresolvedReferences
                         if self.m_argv[-2] is self.command and self.command in self.validcommands:
                             self.print_commandline_help(usageonly=False)
                         else:
                             if self.doprinthelp:
+                                print("doprinthelp")
                                 self.print_commandline_help(usageonly=False)
 
                                 if self.m_parents is not None:
                                     raise SystemExit(0)
                     else:
                         self.print_commandline_help(usageonly=False)
+                    raise SystemExit(0)
                 else:
                     if exdoc is True:
                         print(self.get_usage_from_mdoc())
-                        exit(1)
+                        raise SystemExit(0)
 
             if self.write is not None:
                 fp = open(self.write, "w")
@@ -347,6 +350,7 @@ class Arguments(object):
         cmdbuffering = False
         commands = {}
         newdoc = ""
+
         for line in doc.split("\n"):
             if cmdbuffering is True:
                 ls = line.strip().split()
@@ -375,9 +379,6 @@ class Arguments(object):
                 newdoc += " " * (longest - len(cmd))
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
-
-
-
 
         return newdoc.strip()
 
@@ -457,7 +458,7 @@ class Arguments(object):
                     for sarg in list(sys.argv):
                         if "-h" in sarg or "--help" in sarg:
                             self.print_commandless_help()
-                            break
+                            exit(1)
                     else:
                         usage = self.get_usage_from_mdoc()
                         print("\033[34m" + usage + "\033[0m")
@@ -751,12 +752,12 @@ class Arguments(object):
         strbldr2 += "\n"
         strbldr2 += self.write_members()
         strbldr2 += 8 * " " + "super().__init__(doc)\n\n"
-        return strbldr + "\n\n" + strbldr2
+        return strbldr2
 
+        # return strbldr + "\n\n" + strbldr2
     def write_members(self):
         """
-        @type s: list
-        @return: None
+        write_members
         """
         s = ""
         objattributes = list(self.m_reprdict["positional"].keys())
@@ -964,8 +965,6 @@ class BaseArguments(Arguments):
 
         # noinspection PyUnusedLocal
         args = []
-
-
         super().__init__(doc, validateschema, argvalue, yamlstr, yamlfile, parse_arguments, persistoption, alwaysfullhelp, version, parent)
 
     def validcommand(self, cmd):
