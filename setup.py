@@ -7,13 +7,13 @@ license: GNU-GPL2
 
 from setuptools import setup
 setup(name='arguments',
-      version='59',
+      version='60',
       description='Argument parser based on docopt',
       url='https://github.com/erikdejonge/arguments',
       author='Erik de Jonge',
       author_email='erik@a8.nl',
       license='GPL',
-      packages=['arguments', 'fallbackdocopt'],
+      packages=['arguments', 'fallbackdocopt', 'pyyaml'],
       zip_safe=True,
       #install_requires=['docopt', 'schema', 'consoleprinter'],
       classifiers=[
