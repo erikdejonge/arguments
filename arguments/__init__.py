@@ -350,19 +350,27 @@ class Arguments(object):
         cmdbuffering = False
         commands = {}
         newdoc = ""
-
+        end_of_doc = []
+        end_of_doc_markers = ["author", "project", "created"]
         for line in doc.split("\n"):
-            if cmdbuffering is True:
-                ls = line.strip().split()
-
-                if len(ls) > 0 and len(ls[0].strip()) > 0:
-                    commands[ls[0]] = " ".join(ls[1:])
+            eofm = False
+            for marker in end_of_doc_markers:
+                if line.replace(" ", "").strip().startswith(marker+":"):
+                    eofm = True
+            if eofm is True:
+                end_of_doc.append(line)
             else:
-                newdoc += line
-                newdoc += "\n"
+                if cmdbuffering is True and line.find(" ")==0:
+                    ls = line.strip().split()
 
-            if "commands:" in line.lower():
-                cmdbuffering = True
+                    if len(ls) > 0 and len(ls[0].strip()) > 0:
+                        commands[ls[0]] = " ".join(ls[1:])
+                else:
+                    newdoc += line
+                    newdoc += "\n"
+
+                if "commands:" in line.lower():
+                    cmdbuffering = True
 
         commandkeys = sorted(commands.keys())
         longest = 0
@@ -370,16 +378,19 @@ class Arguments(object):
         for cmd in commandkeys:
             if len(cmd) > longest:
                 longest = len(cmd)
-
+        newdoc = newdoc.strip()+"\n"
         for cmd in commandkeys:
             if len(commands[cmd].strip()) > 0:
                 newdoc += " " * 4
-                newdoc += cmd
+                newdoc += cmd +" : "
                 newdoc += " " * 2
                 newdoc += " " * (longest - len(cmd))
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
-
+        if len(end_of_doc) > 0:
+            newdoc = newdoc.strip()+"\n\n"
+            for line in end_of_doc:
+                newdoc += line+"\n"
         return newdoc.strip()
 
     def get_usage_from_mdoc(self):
@@ -460,6 +471,7 @@ class Arguments(object):
                             self.print_commandless_help()
                             exit(1)
                     else:
+
                         usage = self.get_usage_from_mdoc()
                         print("\033[34m" + usage + "\033[0m")
 
@@ -558,7 +570,7 @@ class Arguments(object):
                 if len(ls) > 1:
                     command = ls[0].strip()
 
-                    if command not in self.m_commandline_help:
+                    if command not in self.m_commandline_help and command not in ["author", "date", "project"]:
                         if command not in self.m_commandline_help_default:
                             self.m_commandline_help_default[command] = str(" ".join(ls[1:])).strip()
 
