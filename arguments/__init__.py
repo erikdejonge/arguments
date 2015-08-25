@@ -310,11 +310,11 @@ class Arguments(object):
                                     raise SystemExit(0)
                     else:
                         self.print_commandline_help(usageonly=False)
-                    raise SystemExit(0)
+                    raise SystemExit(1)
                 else:
                     if exdoc is True:
                         print(self.get_usage_from_mdoc())
-                        raise SystemExit(0)
+                        raise SystemExit(1)
 
             if self.write is not None:
                 fp = open(self.write, "w")
