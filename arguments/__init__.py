@@ -729,6 +729,7 @@ class Arguments(object):
         """
         get_subclass
         """
+
         strbldr = """
             class IArguments(Arguments):
                 \"\"\"
@@ -801,6 +802,7 @@ class Arguments(object):
         """
         __str__
         """
+
         if not sys.stdout.isatty():
             self.set_reprdict_from_attributes()
             value = self.m_reprdict
