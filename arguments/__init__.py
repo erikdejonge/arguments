@@ -504,7 +504,7 @@ class Arguments(object):
                                     arguments[k] = os.getcwd()
 
                                 if "./" in arguments[k].strip():
-                                    arguments[k] = arguments[k].replace("./", os.getcwd() + "/")
+                                    arguments[k] = os.path.abspath(arguments[k])
 
                                 if arguments[k].rstrip("/").strip() != "/":
                                     arguments[k] = arguments[k].rstrip("/").strip()
@@ -1115,13 +1115,6 @@ class Use(object):
 
             raise SchemaError('%s(%r) raised %r' % (f, data, x), self._error)
 
-
-def abspath(p):
-    """
-    @type p: str
-    @return: None
-    """
-    return os.path.normpath(os.path.join(os.getcwd(), p))
 
 
 def delete_directory(dirpath, excluded_file_names):
