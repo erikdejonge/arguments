@@ -11,7 +11,6 @@ license: GNU-GPL2
 """
 from __future__ import division, print_function, absolute_import, unicode_literals
 from future import standard_library
-
 import os
 import sys
 import json
@@ -26,6 +25,21 @@ from consoleprinter import abort, console, handle_ex, snake_case, get_print_yaml
 COMPARABLE, CALLABLE, VALIDATOR, TYPE, DICT, ITERABLE = list(range(6))
 
 MARKER = object()
+
+
+def is_python3():
+    """
+    is_python3
+    """
+    return sys.version_info.major == 3
+
+
+def require_python3_raise_runtime_error():
+    """
+    require_python3_raise_runtime_error
+    """
+    if not is_python3:
+        raise RuntimeError("Need python3")
 
 
 class Schema(object):
@@ -217,7 +231,7 @@ class Arguments(object):
     """
     Arguments
     """
-    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None, parent=None):
+    def __init__(self, doc=None, validateschema=None, argvalue=None, yamlstr=None, yamlfile=None, parse_arguments=True, persistoption=False, alwaysfullhelp=False, version=None, parent=None, python3only=False):
         """
         @type doc: str, None
         @type validateschema: Schema, None
@@ -237,6 +251,9 @@ class Arguments(object):
         self.__add_parent(parent)
         self.parsedarguments = {}
         self.command = ""
+
+        if python3only:
+            require_python3_raise_runtime_error()
 
         if not hasattr(self, "validcommands"):
             self.validcommands = []
@@ -295,8 +312,6 @@ class Arguments(object):
 
                 if hasattr(self, "help") and getattr(self, "help") is True:
                     # noinspection PyUnresolvedReferences
-
-
                     if self.command and len(self.m_argv) > 1:
                         # noinspection PyUnresolvedReferences
                         if self.m_argv[-2] is self.command and self.command in self.validcommands:
@@ -310,10 +325,12 @@ class Arguments(object):
                                     raise SystemExit(0)
                     else:
                         self.print_commandline_help(usageonly=False)
+
                     raise SystemExit(1)
                 else:
                     if exdoc is True:
                         print(self.get_usage_from_mdoc())
+
                         raise SystemExit(1)
 
             if self.write is not None:
@@ -352,15 +369,18 @@ class Arguments(object):
         newdoc = ""
         end_of_doc = []
         end_of_doc_markers = ["author", "project", "created"]
+
         for line in doc.split("\n"):
             eofm = False
+
             for marker in end_of_doc_markers:
-                if line.replace(" ", "").strip().startswith(marker+":"):
+                if line.replace(" ", "").strip().startswith(marker + ":"):
                     eofm = True
+
             if eofm is True:
                 end_of_doc.append(line)
             else:
-                if cmdbuffering is True and line.find(" ")==0:
+                if cmdbuffering is True and line.find(" ") == 0:
                     ls = line.strip().split()
 
                     if len(ls) > 0 and len(ls[0].strip()) > 0:
@@ -378,19 +398,24 @@ class Arguments(object):
         for cmd in commandkeys:
             if len(cmd) > longest:
                 longest = len(cmd)
-        newdoc = newdoc.strip()+"\n"
+
+        newdoc = newdoc.strip() + "\n"
+
         for cmd in commandkeys:
             if len(commands[cmd].strip()) > 0:
                 newdoc += " " * 4
-                newdoc += cmd +" : "
+                newdoc += cmd + " : "
                 newdoc += " " * 2
                 newdoc += " " * (longest - len(cmd))
                 newdoc += commands[cmd].strip()
                 newdoc += "\n"
+
         if len(end_of_doc) > 0:
-            newdoc = newdoc.strip()+"\n\n"
+            newdoc = newdoc.strip() + "\n\n"
+
             for line in end_of_doc:
-                newdoc += line+"\n"
+                newdoc += line + "\n"
+
         return newdoc.strip()
 
     def get_usage_from_mdoc(self):
@@ -471,7 +496,6 @@ class Arguments(object):
                             self.print_commandless_help()
                             exit(1)
                     else:
-
                         usage = self.get_usage_from_mdoc()
                         print("\033[34m" + usage + "\033[0m")
 
@@ -583,7 +607,6 @@ class Arguments(object):
         if len(doc_help) > 0:
             print("\033[33m--\033[0m")
             print("\033[34m" + doc_help[0] + "\033[0m")
-
             asp = "author  :"
             doc_help_rest = "\n".join(doc_help[1:])
 
@@ -729,7 +752,6 @@ class Arguments(object):
         """
         get_subclass
         """
-
         strbldr = """
             class IArguments(Arguments):
                 \"\"\"
@@ -802,7 +824,6 @@ class Arguments(object):
         """
         __str__
         """
-
         if not sys.stdout.isatty():
             self.set_reprdict_from_attributes()
             value = self.m_reprdict
@@ -1114,7 +1135,6 @@ class Use(object):
             f = self._callable.__name__
 
             raise SchemaError('%s(%r) raised %r' % (f, data, x), self._error)
-
 
 
 def delete_directory(dirpath, excluded_file_names):
