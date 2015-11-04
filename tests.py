@@ -11,9 +11,9 @@ from __future__ import division
 from __future__ import absolute_import
 from future import standard_library
 standard_library.install_aliases()
-from unittester import *
+#from unittester import *
 from arguments import *
-
+import unittest
 
 def raises_error(*args, **kwds):
     """
@@ -147,7 +147,8 @@ def main():
     """
     main
     """
-    unit_test_main(globals())
+    #unit_test_main(globals())
+    pass
 
 
 if __name__ == "__main__":
