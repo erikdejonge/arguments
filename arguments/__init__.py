@@ -449,7 +449,8 @@ class Arguments(object):
             try:
                 if self.m_argv is None:
                     self.m_argv = sys.argv[1:]
-
+                    if "\\" in str(self.m_argv):
+                        self.m_argv = [x for x in "".join([x+"@$" for x in self.m_argv]).replace('\@$', ' ').split('@$') if x]
                 sorted_argv = []
                 options_argv = []
                 next_is_option = False
