@@ -23,4 +23,4 @@ setup(name='arguments',
           "Operating System :: POSIX",
           "Topic :: Software Development :: Libraries :: Python Modules",
           "Topic :: System",
-      ], requires=['future', 'ujson', 'sh'])
+      ], requires=['consoleprinter', 'future', 'ujson', 'sh'])
